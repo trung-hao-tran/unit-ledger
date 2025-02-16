@@ -27,10 +27,10 @@ export function RoomSelectionDialog({
       block.push(room);
       acc.set(room.blockNumber, block);
       return acc;
-    }, new Map<number, Room[]>());
+    }, new Map<string, Room[]>());
 
     return Array.from(groups.entries())
-      .sort(([a], [b]) => a - b)
+      .sort(([a], [b]) => a.localeCompare(b))
       .map(([blockNumber, rooms]) => ({
         blockNumber,
         rooms: rooms.sort((a, b) => a.roomNumber - b.roomNumber),
@@ -41,7 +41,7 @@ export function RoomSelectionDialog({
   // Set initial active block
   useState(() => {
     if (blockGroups.length > 0 && !activeBlock) {
-      setActiveBlock(String(blockGroups[0].blockNumber));
+      setActiveBlock(blockGroups[0].blockNumber);
     }
   });
 
@@ -55,7 +55,7 @@ export function RoomSelectionDialog({
     setSelectedRooms(newSelected);
   };
 
-  const handleBlockSelect = (blockNumber: number, checked: boolean) => {
+  const handleBlockSelect = (blockNumber: string, checked: boolean) => {
     const newSelected = new Set(selectedRooms);
     const blockRooms = availableRooms.filter(room => room.blockNumber === blockNumber);
     
@@ -79,7 +79,7 @@ export function RoomSelectionDialog({
   };
 
   const selectedRoomsList = availableRooms.filter(room => selectedRooms.has(room.roomName))
-    .sort((a, b) => a.blockNumber - b.blockNumber || a.roomNumber - b.roomNumber);
+    .sort((a, b) => a.blockNumber.localeCompare(b.blockNumber) || a.roomNumber - b.roomNumber);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -110,7 +110,7 @@ export function RoomSelectionDialog({
                 {blockGroups.map(({ blockNumber }) => (
                   <TabsTrigger
                     key={blockNumber}
-                    value={String(blockNumber)}
+                    value={blockNumber}
                     className="relative h-10 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground"
                   >
                     Block {blockNumber}
@@ -122,7 +122,7 @@ export function RoomSelectionDialog({
             {blockGroups.map(({ blockNumber, rooms, isAllSelected }) => (
               <TabsContent 
                 key={blockNumber} 
-                value={String(blockNumber)}
+                value={blockNumber}
                 className="rounded-md border shadow-sm"
               >
                 <div className="p-4 space-y-4">

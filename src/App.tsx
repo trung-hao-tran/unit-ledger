@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 import { RoomTable } from '@/components/room-table';
 import { Toolbar } from '@/components/toolbar';
 import { PreparationStage } from '@/components/preparation-stage';
@@ -60,7 +60,7 @@ function App() {
   const [calculationMode, setCalculationMode] = useState<CalculationMode>('none');
   const { 
     rooms,
-    setRooms,
+    // setRooms,
     updateRooms,
   } = useRoomsStore();
 

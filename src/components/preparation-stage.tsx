@@ -22,10 +22,10 @@ export function PreparationStage({
       block.push(room);
       acc.set(room.blockNumber, block);
       return acc;
-    }, new Map<number, Room[]>());
+    }, new Map<string, Room[]>());
 
     return Array.from(groups.entries())
-      .sort(([a], [b]) => a - b)
+      .sort(([a], [b]) => a.localeCompare(b))
       .map(([blockNumber, rooms]) => ({
         blockNumber,
         rooms: rooms.sort((a, b) => a.roomNumber - b.roomNumber),
@@ -43,7 +43,7 @@ export function PreparationStage({
     setSelectedRooms(newSelected);
   };
 
-  const handleBlockSelect = (blockNumber: number, checked: boolean) => {
+  const handleBlockSelect = (blockNumber: string, checked: boolean) => {
     const newSelected = new Set(selectedRooms);
     const blockRooms = rooms.filter(room => room.blockNumber === blockNumber);
     
