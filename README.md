@@ -1,50 +1,74 @@
-# React + TypeScript + Vite
+# Utility Cost Management Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web application for managing utility costs and room data with a clean, professional interface.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Room Management**
+  - Display rooms in a data table with details (room name, electric/water readings, price)
+  - Search functionality for rooms by name, block number, or room number
+  - Add new rooms with block number, room number, and price
+  - Import/Export room data
+  - Print functionality with custom template
 
-## Expanding the ESLint configuration
+- **UI/UX Design**
+  - Mobile-compatible responsive design
+  - Clean, professional look using shadcn/ui components
+  - Tailwind CSS styling
+  - Lucide icons for UI elements
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Tech Stack
 
-- Configure the top-level `parserOptions` property like this:
+- Vite + React + TypeScript
+- shadcn/ui for components
+- Tailwind CSS for styling
+- Lucide icons for UI elements
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Getting Started
+
+1. Install dependencies:
+```bash
+npm install
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+2. Start the development server:
+```bash
+npm run dev
 ```
+
+3. Build for production:
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+  ├── components/      # React components
+  │   ├── ui/         # shadcn/ui components
+  │   └── room-table  # Room management components
+  ├── lib/            # Utility functions
+  ├── types/          # TypeScript interfaces
+  └── App.tsx         # Main application component
+```
+
+## Data Types
+
+```typescript
+interface UtilCost {
+  type: 'electric' | 'water' | 'garbage';
+  price: number;
+}
+
+interface Room {
+  blockNumber: number;
+  roomNumber: number;
+  roomName: string;
+  currentElectric: number;
+  currentWater: number;
+  previousElectric: number;
+  previousWater: number;
+  roomPrice: number;
+  updatedAt: string;
+}
