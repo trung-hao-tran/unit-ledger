@@ -10,7 +10,6 @@ export function Toolbar({
   calculationButtonClass,
   printButtonClass,
   printButtonText = "Print",
-  isPrinting,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +44,7 @@ export function Toolbar({
 
   return (
     <div className="flex items-center justify-between p-4 border-b ">
-      <div className="space-x-2">
+      <div className="flex space-x-2">
         <input
           type="file"
           ref={fileInputRef}
@@ -59,24 +58,18 @@ export function Toolbar({
         <Button variant="outline" onClick={handleExport}>
           Export
         </Button>
-      </div>
-      <div className="space-x-2">
-        {!isPrinting && (
-          <Button 
-            onClick={onToggleCalculation}
-            className={calculationButtonClass}
-          >
-            {isCalculating ? "Exit Calculation" : "Start Calculation"}
-          </Button>
-        )}
-        {!isCalculating && (
-          <Button 
-            onClick={onPrint}
-            className={printButtonClass}
-          >
-            {printButtonText}
-          </Button>
-        )}
+        <Button
+          onClick={onToggleCalculation}
+          className={calculationButtonClass}
+        >
+          {isCalculating ? "Exit Calculation" : "Start Calculation"}
+        </Button>
+        <Button
+          onClick={onPrint}
+          className={printButtonClass}
+        >
+          {printButtonText}
+        </Button>
       </div>
     </div>
   );

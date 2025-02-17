@@ -84,7 +84,7 @@ export function RoomSelectionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="w-full max-w-6xl p-6">
         <DialogHeader>
           <DialogTitle>Select Rooms</DialogTitle>
         </DialogHeader>
@@ -138,7 +138,7 @@ export function RoomSelectionDialog({
                       Select All Block {group.blockNumber}
                     </label>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pr-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-10 gap-2 pr-4">
                     {group.rooms.map((room) => (
                       <div key={room.roomName} className="flex items-center space-x-2">
                         <Checkbox
