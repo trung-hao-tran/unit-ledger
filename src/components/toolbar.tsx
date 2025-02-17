@@ -1,19 +1,22 @@
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useRoomsStore } from '@/store/rooms';
 import type { ToolbarProps } from '@/types';
+import { exportToJson, importFromJson } from '@/utils/export';
 
 export function Toolbar({
   onPrint,
   isCalculating,
   onToggleCalculation,
+  calculationButtonClass,
+  printButtonClass,
+  printButtonText = "Print",
+  isPrinting,
 }: ToolbarProps) {
-  const { exportData, importData } = useRoomsStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
     try {
-      await exportData();
+      await exportToJson();
     } catch (error) {
       // You might want to show a toast notification here
       console.error('Export failed:', error);
@@ -25,7 +28,7 @@ export function Toolbar({
     if (!file) return;
 
     try {
-      await importData(file);
+      await importFromJson(file);
       // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -41,7 +44,7 @@ export function Toolbar({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex items-center justify-between p-4 border-b ">
       <div className="space-x-2">
         <input
           type="file"
@@ -56,16 +59,25 @@ export function Toolbar({
         <Button variant="outline" onClick={handleExport}>
           Export
         </Button>
-        <Button variant="outline" onClick={onPrint}>
-          Print
-        </Button>
       </div>
-      <Button
-        variant={isCalculating ? "secondary" : "outline"}
-        onClick={onToggleCalculation}
-      >
-        {isCalculating ? "Exit Calculation" : "Start Calculation"}
-      </Button>
+      <div className="space-x-2">
+        {!isPrinting && (
+          <Button 
+            onClick={onToggleCalculation}
+            className={calculationButtonClass}
+          >
+            {isCalculating ? "Exit Calculation" : "Start Calculation"}
+          </Button>
+        )}
+        {!isCalculating && (
+          <Button 
+            onClick={onPrint}
+            className={printButtonClass}
+          >
+            {printButtonText}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

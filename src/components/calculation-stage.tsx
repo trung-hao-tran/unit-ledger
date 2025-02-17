@@ -161,166 +161,168 @@ export function CalculationStage({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Update Utility Readings</h2>
-        <div className="space-x-2">
-          <Button 
-            variant="outline"
-            onClick={() => setIsSelectionOpen(true)}
-          >
-            Add Rooms
-          </Button>
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            Save Changes
-          </Button>
-        </div>
-      </div>
-
-      <Tabs 
-        value={activeBlock} 
-        onValueChange={setActiveBlock}
-        className="w-full space-y-6"
-      >
-        <div className="border-b">
-          <TabsList className="h-10 items-center justify-start w-full rounded-none bg-transparent p-0">
-            {blockGroups.map(({ blockNumber }) => (
-              <TabsTrigger
-                key={blockNumber}
-                value={blockNumber}
-                className="relative h-10 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground"
-              >
-                Block {blockNumber}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+    <div className="w-full flex justify-center">
+      <div className="max-w-4xl w-full space-y-4 p-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Update Utility Readings</h2>
+          <div className="space-x-2">
+            <Button 
+              variant="outline"
+              onClick={() => setIsSelectionOpen(true)}
+            >
+              Add Rooms
+            </Button>
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              Save Changes
+            </Button>
+          </div>
         </div>
 
-        {blockGroups.map(({ blockNumber, rooms }) => (
-          <TabsContent 
-            key={blockNumber} 
-            value={blockNumber}
-            className="rounded-md border shadow-sm"
-          >
-            <div className="p-4 space-y-4">
-              <div className="rounded-md">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="p-2 text-left">Room</th>
-                      <th className="p-2 text-left">Price</th>
-                      <th className="p-2 text-left">Current Electric</th>
-                      <th className="p-2 text-left">New Electric</th>
-                      <th className="p-2 text-left">Current Water</th>
-                      <th className="p-2 text-left">New Water</th>
-                      <th className="p-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rooms.map(room => {
-                      const isEditing = editingRooms.has(room.roomName);
-                      return (
-                        <tr key={room.roomName} className="border-b">
-                          <td className="p-2">{room.roomName}</td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={room.roomPrice}
-                              onChange={e =>
-                                handleInputChange(room.roomName, 'roomPrice', Number(e.target.value))
-                              }
-                              className={`w-24 ${validationErrors[room.roomName]?.has('roomPrice') ? 'border-red-500' : ''}`}
-                              disabled={!isEditing}
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={room.currentElectric}
-                              onChange={e =>
-                                handleInputChange(room.roomName, 'currentElectric', Number(e.target.value))
-                              }
-                              className={`w-24 ${validationErrors[room.roomName]?.has('currentElectric') ? 'border-red-500' : ''}`}
-                              disabled={!isEditing}
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={room.newElectric}
-                              onChange={e =>
-                                handleInputChange(room.roomName, 'newElectric', Number(e.target.value))
-                              }
-                              className={`w-24 ${validationErrors[room.roomName]?.has('newElectric') ? 'border-red-500' : ''}`}
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={room.currentWater}
-                              onChange={e =>
-                                handleInputChange(room.roomName, 'currentWater', Number(e.target.value))
-                              }
-                              className={`w-24 ${validationErrors[room.roomName]?.has('currentWater') ? 'border-red-500' : ''}`}
-                              disabled={!isEditing}
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={room.newWater}
-                              onChange={e =>
-                                handleInputChange(room.roomName, 'newWater', Number(e.target.value))
-                              }
-                              className={`w-24 ${validationErrors[room.roomName]?.has('newWater') ? 'border-red-500' : ''}`}
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                tabIndex={-1}
-                                onClick={() => toggleEdit(room.roomName)}
-                                className={isEditing ? 'text-white bg-black' : 'text-primary'}
-                              >
-                                <Pencil2Icon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                tabIndex={-1}
-                                size="icon"
-                                onClick={() => removeCalculationRoom(room.roomName)}
-                              >
-                                <Cross2Icon className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+        <Tabs 
+          value={activeBlock} 
+          onValueChange={setActiveBlock}
+          className="w-full space-y-6"
+        >
+          <div className="border-b">
+            <TabsList className="h-10 items-center justify-start w-full rounded-none bg-transparent p-0">
+              {blockGroups.map(({ blockNumber }) => (
+                <TabsTrigger
+                  key={blockNumber}
+                  value={blockNumber}
+                  className="relative h-10 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground"
+                >
+                  Block {blockNumber}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+
+          {blockGroups.map(({ blockNumber, rooms }) => (
+            <TabsContent 
+              key={blockNumber} 
+              value={blockNumber}
+              className="rounded-md border shadow-sm"
+            >
+              <div className="p-4 space-y-4">
+                <div className="rounded-md">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="p-2 text-left">Room</th>
+                        <th className="p-2 text-left">Price</th>
+                        <th className="p-2 text-left">Current Electric</th>
+                        <th className="p-2 text-left">New Electric</th>
+                        <th className="p-2 text-left">Current Water</th>
+                        <th className="p-2 text-left">New Water</th>
+                        <th className="p-2 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rooms.map(room => {
+                        const isEditing = editingRooms.has(room.roomName);
+                        return (
+                          <tr key={room.roomName} className="border-b">
+                            <td className="p-2">{room.roomName}</td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                value={room.roomPrice}
+                                onChange={e =>
+                                  handleInputChange(room.roomName, 'roomPrice', Number(e.target.value))
+                                }
+                                className={`w-24 ${validationErrors[room.roomName]?.has('roomPrice') ? 'border-red-500' : ''}`}
+                                disabled={!isEditing}
+                                min="0"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                value={room.currentElectric}
+                                onChange={e =>
+                                  handleInputChange(room.roomName, 'currentElectric', Number(e.target.value))
+                                }
+                                className={`w-24 ${validationErrors[room.roomName]?.has('currentElectric') ? 'border-red-500' : ''}`}
+                                disabled={!isEditing}
+                                min="0"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                value={room.newElectric}
+                                onChange={e =>
+                                  handleInputChange(room.roomName, 'newElectric', Number(e.target.value))
+                                }
+                                className={`w-24 ${validationErrors[room.roomName]?.has('newElectric') ? 'border-red-500' : ''}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                value={room.currentWater}
+                                onChange={e =>
+                                  handleInputChange(room.roomName, 'currentWater', Number(e.target.value))
+                                }
+                                className={`w-24 ${validationErrors[room.roomName]?.has('currentWater') ? 'border-red-500' : ''}`}
+                                disabled={!isEditing}
+                                min="0"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                value={room.newWater}
+                                onChange={e =>
+                                  handleInputChange(room.roomName, 'newWater', Number(e.target.value))
+                                }
+                                className={`w-24 ${validationErrors[room.roomName]?.has('newWater') ? 'border-red-500' : ''}`}
+                                min="0"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  tabIndex={-1}
+                                  onClick={() => toggleEdit(room.roomName)}
+                                  className={isEditing ? 'text-white bg-black' : 'text-primary'}
+                                >
+                                  <Pencil2Icon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  tabIndex={-1}
+                                  size="icon"
+                                  onClick={() => removeCalculationRoom(room.roomName)}
+                                >
+                                  <Cross2Icon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+            </TabsContent>
+          ))}
+        </Tabs>
 
-      <RoomSelectionDialog
-        isOpen={isSelectionOpen}
-        onClose={() => setIsSelectionOpen(false)}
-        onConfirm={handleAddRooms}
-        availableRooms={getRemainingRooms(calculationRooms.map(r => r.roomName))}
-      />
+        <RoomSelectionDialog
+          isOpen={isSelectionOpen}
+          onClose={() => setIsSelectionOpen(false)}
+          onConfirm={handleAddRooms}
+          availableRooms={getRemainingRooms(calculationRooms.map(r => r.roomName))}
+        />
+      </div>
     </div>
   );
 }

@@ -6,17 +6,36 @@ import { RoomDialog } from './room-dialog';
 import { useRoomsStore } from '@/store/rooms';
 import { Pencil2Icon, Cross2Icon } from '@radix-ui/react-icons';
 import type { Room } from '@/types';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, FilterFn, VisibilityState, Updater } from '@tanstack/react-table';
 
 interface RoomTableProps {
   rooms: Room[];
 }
+
+const fuzzyFilter: FilterFn<Room> = (row, columnId, value) => {
+  const cellValue = row.getValue(columnId);
+  if (typeof cellValue === 'string' && typeof value === 'string') {
+    return cellValue.toLowerCase().includes(value.toLowerCase());
+  }
+  return false;
+};
 
 export function RoomTable({ rooms }: RoomTableProps) {
   const { editRoom, addRoom, deleteRoom } = useRoomsStore();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    blockNumber: false, // Hide block number column by default
+  });
+
+  const handleColumnVisibilityChange = (updaterOrValue: Updater<VisibilityState>) => {
+    if (typeof updaterOrValue === 'function') {
+      setColumnVisibility(updaterOrValue(columnVisibility));
+    } else {
+      setColumnVisibility(updaterOrValue);
+    }
+  };
 
   const handleEdit = (room: Room) => {
     setSelectedRoom(room);
@@ -55,6 +74,8 @@ export function RoomTable({ rooms }: RoomTableProps) {
     {
       accessorKey: 'roomName',
       header: 'Room Name',
+      filterFn: fuzzyFilter,
+      enableColumnFilter: true,
     },
     {
       accessorKey: 'roomPrice',
@@ -65,12 +86,12 @@ export function RoomTable({ rooms }: RoomTableProps) {
       header: 'Current Electric',
     },
     {
-      accessorKey: 'currentWater',
-      header: 'Current Water',
-    },
-    {
       accessorKey: 'previousElectric',
       header: 'Previous Electric',
+    },
+    {
+      accessorKey: 'currentWater',
+      header: 'Current Water',
     },
     {
       accessorKey: 'previousWater',
@@ -102,7 +123,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(room)}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-900 hover:bg-red-100"
+              className="h-8 w-8 p-0"
             >
               <Cross2Icon className="h-4 w-4" />
             </Button>
@@ -110,41 +131,57 @@ export function RoomTable({ rooms }: RoomTableProps) {
         );
       },
     },
+    // Hidden column for block filtering
+    {
+      accessorKey: 'blockNumber',
+      header: 'Block',
+      filterFn: fuzzyFilter,
+      enableColumnFilter: true,
+    },
   ];
 
+  // Extract unique block numbers for the filter dropdown
+  const blockNumbers = [...new Set(rooms.map(room => room.blockNumber))];
+
   return (
-    <>
-      <DataTable 
-        columns={columns} 
-        data={rooms} 
-        onAddNew={handleAddNew}
-        blockNumbers={Array.from(new Set(rooms.map(room => room.blockNumber))).sort()}
-      />
+    <div className="w-full flex justify-center">
+      <div className="max-w-4xl w-full space-y-4 p-4">
+        <DataTable
+          columns={columns}
+          data={rooms}
+          onAddNew={handleAddNew}
+          blockNumbers={blockNumbers}
+          initialState={{
+            columnVisibility
+          }}
+          onColumnVisibilityChange={handleColumnVisibilityChange}
+        />
 
-      <RoomDialog
-        isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
-        onSave={handleSave}
-        room={selectedRoom ?? undefined}
-      />
+        <RoomDialog
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onSave={handleSave}
+          room={selectedRoom ?? undefined}
+        />
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the room {selectedRoom?.roomName}.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the room
+                and all its data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   );
 }

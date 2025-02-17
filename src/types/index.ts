@@ -10,14 +10,17 @@ export interface Room {
   updatedAt: string;
 }
 
-export interface UtilCost {
-  type: 'electric' | 'water' | 'garbage';
-  price: number;
+export interface UtilityCostSet {
+  id: number;
+  name: string;
+  electricityCost: number;
+  waterCost: number;
+  garbageCost: number;
 }
 
 export interface ExportData {
   rooms: Room[];
-  utilityCosts: UtilCost[];
+  utilityCosts: UtilityCostSet[];
   exportedAt: string;
   version: '1.0.0';
 }
@@ -43,7 +46,7 @@ export interface CalculationFields {
 export type CalculationRoom = Room & CalculationFields;
 
 export interface DataSet {
-  utilCosts: UtilCost[];
+  utilCosts: UtilityCostSet[];
   rooms: Room[];
   lastUpdated: string;
 }
@@ -58,7 +61,11 @@ export interface ToolbarProps {
   onExport: () => void;
   onPrint: () => void;
   isCalculating: boolean;
+  isPrinting: boolean;
   onToggleCalculation: () => void;
+  calculationButtonClass?: string;
+  printButtonClass?: string;
+  printButtonText?: string;
 }
 
 export interface RoomTableProps {
@@ -69,10 +76,63 @@ export interface UtilityCostDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  initialCosts?: UtilCost[];
+  initialCosts?: UtilityCostSet[];
 }
 
 export interface CalculationStageProps {
   onSave: (updatedRooms: Room[]) => void;
   onCancel: () => void;
+}
+
+export type PrintingType = 'invoice' | 'total';
+
+export interface PrintingOptions {
+  types: {
+    invoice: boolean;
+    total: boolean;
+  };
+  bottomUp: boolean;
+  includeDate: boolean;
+  selectedDate?: Date;
+}
+
+export interface PrintingDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPrint: (options: {
+    selectedRooms: Room[];
+    selectedCostSet: UtilityCostSet;
+    printingOptions: PrintingOptions;
+  }) => void;
+}
+
+export interface PrintRoomData {
+  roomPrice: number;
+  roomName: string;
+  blockNumber: string;
+  roomNumber: number;
+  previousElectric: number;
+  currentElectric: number;
+  previousWater: number;
+  currentWater: number;
+}
+
+export interface PrintUtilityData {
+  electricityCost: number;
+  waterCost: number;
+  garbageCost: number;
+  printDate: Date;
+  printTypes: {
+    invoice: boolean;
+    total: boolean;
+  };
+  totalSheetOptions?: {
+    bottomUp: boolean;
+    includeDate: boolean;
+  };
+}
+
+export interface PrintingData {
+  rooms: PrintRoomData[];
+  utility: PrintUtilityData;
 }

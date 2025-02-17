@@ -66,62 +66,64 @@ export function PreparationStage({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Select Rooms</h2>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleConfirm}
-            disabled={selectedRooms.size === 0}
-          >
-            Continue
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {blockGroups.map((group) => (
-          <div key={group.blockNumber} className="rounded-md border p-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <Checkbox
-                id={`block-${group.blockNumber}`}
-                checked={group.isAllSelected}
-                onCheckedChange={(checked) => 
-                  handleBlockSelect(group.blockNumber, checked === true)
-                }
-              />
-              <label
-                htmlFor={`block-${group.blockNumber}`}
-                className="text-sm font-medium leading-none"
-              >
-                Block {group.blockNumber}
-              </label>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ml-6">
-              {group.rooms.map((room) => (
-                <div key={room.roomName} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={room.roomName}
-                    checked={selectedRooms.has(room.roomName)}
-                    onCheckedChange={(checked) => 
-                      handleRoomSelect(room.roomName, checked === true)
-                    }
-                  />
-                  <label
-                    htmlFor={room.roomName}
-                    className="text-sm leading-none"
-                  >
-                    Room {room.roomName}
-                  </label>
-                </div>
-              ))}
-            </div>
+    <div className="w-full flex justify-center">
+      <div className="max-w-4xl w-full space-y-4 p-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Select Rooms</h2>
+          <div className="space-x-2">
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirm}
+              disabled={selectedRooms.size === 0}
+            >
+              Continue
+            </Button>
           </div>
-        ))}
+        </div>
+
+        <div className="space-y-4">
+          {blockGroups.map((group) => (
+            <div key={group.blockNumber} className="rounded-md border">
+              <div className="flex items-center space-x-2 mb-4 p-4">
+                <Checkbox
+                  id={`block-${group.blockNumber}`}
+                  checked={group.isAllSelected}
+                  onCheckedChange={(checked) => 
+                    handleBlockSelect(group.blockNumber, checked === true)
+                  }
+                />
+                <label
+                  htmlFor={`block-${group.blockNumber}`}
+                  className="text-sm font-medium leading-none"
+                >
+                  Block {group.blockNumber}
+                </label>
+              </div>
+
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4 px-4 pb-4 ml-6">
+                {group.rooms.map((room) => (
+                  <div key={room.roomName} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={room.roomName}
+                      checked={selectedRooms.has(room.roomName)}
+                      onCheckedChange={(checked) => 
+                        handleRoomSelect(room.roomName, checked === true)
+                      }
+                    />
+                    <label
+                      htmlFor={room.roomName}
+                      className="text-sm leading-none"
+                    >
+                      {room.roomName}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

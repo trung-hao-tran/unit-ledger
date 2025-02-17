@@ -3,11 +3,11 @@ import { RoomTable } from '@/components/room-table';
 import { Toolbar } from '@/components/toolbar';
 import { PreparationStage } from '@/components/preparation-stage';
 import { CalculationStage } from '@/components/calculation-stage';
+import { PrintingStage } from '@/components/printing-stage';
 import { useRoomsStore } from '@/store/rooms';
 import { useCalculationRoomsStore } from '@/store/calculation-rooms';
-import type { Room } from '@/types';
-
-type CalculationMode = 'none' | 'preparation' | 'calculation';
+import type { Room, UtilityCostSet, PrintingOptions } from '@/types';
+import { cn } from '@/lib/utils';
 
 // const mockRooms: Room[] = [
 //   { 
@@ -56,6 +56,8 @@ type CalculationMode = 'none' | 'preparation' | 'calculation';
 //   },
 // ];
 
+type CalculationMode = 'none' | 'preparation' | 'calculation' | 'printing';
+
 function App() {
   const [calculationMode, setCalculationMode] = useState<CalculationMode>('none');
   const { 
@@ -69,11 +71,16 @@ function App() {
     clearCalculation,
   } = useCalculationRoomsStore();
 
-  // Initialize rooms with mock data
-  // useEffect(() => {
-  //   setRooms(mockRooms);
-  // }, [setRooms]);
-
+  const handlePrint = (options: {
+    selectedRooms: Room[];
+    selectedCostSet: UtilityCostSet;
+    printingOptions: PrintingOptions;
+  }) => {
+    // Implement printing logic here
+    console.log('Printing with options:', options);
+    setCalculationMode('none');
+  };
+  
   const handlePreparationComplete = (selectedRooms: Room[]) => {
     setCalculationRooms(selectedRooms);
     setCalculationMode('calculation');
@@ -93,9 +100,17 @@ function App() {
     console.log('Export clicked');
   };
 
-  const handlePrint = () => {
+  const handleToggleCalculation = () => {
+    if (calculationMode === 'preparation' || calculationMode === 'calculation') {
+      setCalculationMode('none');
+      clearCalculation();
+    } else if (calculationMode === 'none') {
+      setCalculationMode('preparation');
+    }
+  };
 
-    console.log('Print clicked');
+  const handleTogglePrinting = () => {
+    setCalculationMode(prev => prev === 'printing' ? 'none' : 'printing');
   };
 
   const renderContent = () => {
@@ -118,22 +133,42 @@ function App() {
             }}
           />
         );
+      case 'printing':
+        return (
+          <PrintingStage
+            rooms={rooms}
+            onPrint={handlePrint}
+            onCancel={() => setCalculationMode('none')}
+          />
+        );
       default:
         return <RoomTable rooms={rooms} />;
     }
   };
 
   return (
-    <div className="min-h-screen w-full p-4">
-      <div className="space-y-6">
+    <div className="min-h-screen max-w overflow-x-auto">
+      <div className="space-y-6 w-screen">
         <Toolbar
           onImport={handleImport}
           onExport={handleExport}
-          onPrint={handlePrint}
-          isCalculating={calculationMode !== 'none'}
-          onToggleCalculation={() => 
-            setCalculationMode(prev => prev === 'none' ? 'preparation' : 'none')
-          }
+          onPrint={handleTogglePrinting}
+          isCalculating={calculationMode === 'preparation' || calculationMode === 'calculation'}
+          isPrinting={calculationMode === 'printing'}
+          onToggleCalculation={handleToggleCalculation}
+          calculationButtonClass={cn(
+            "transition-colors",
+            calculationMode === 'preparation' || calculationMode === 'calculation'
+              ? "bg-red-500 hover:bg-red-600"
+              : "bg-green-500 hover:bg-green-600"
+          )}
+          printButtonClass={cn(
+            "transition-colors",
+            calculationMode === 'printing'
+              ? "bg-red-500 hover:bg-red-600"
+              : "bg-blue-500 hover:bg-blue-600"
+          )}
+          printButtonText={calculationMode === 'printing' ? "Exit Printing" : "Print"}
         />
         {renderContent()}
       </div>

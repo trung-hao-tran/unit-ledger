@@ -7,6 +7,8 @@ import {
   useReactTable,
   getFilteredRowModel,
   ColumnFiltersState,
+  VisibilityState,
+  OnChangeFn,
 } from '@tanstack/react-table';
 import { useState } from 'react';
 import {
@@ -23,6 +25,10 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   onAddNew?: () => void;
   blockNumbers?: string[];
+  initialState?: {
+    columnVisibility?: VisibilityState;
+  };
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
 }
 
 export function DataTable<TData, TValue>({
@@ -30,6 +36,8 @@ export function DataTable<TData, TValue>({
   data,
   onAddNew,
   blockNumbers = [],
+  initialState,
+  onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -39,8 +47,11 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange,
+    initialState,
     state: {
       columnFilters,
+      columnVisibility: initialState?.columnVisibility,
     },
   });
 
@@ -117,24 +128,15 @@ export function DataTable<TData, TValue>({
                     className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="p-2 align-middle"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                      <td key={cell.id} className="p-2 align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <td colSpan={columns.length} className="h-24 text-center">
                     No results.
                   </td>
                 </tr>

@@ -1,41 +1,52 @@
 import { create } from 'zustand';
-import type { UtilCost } from '@/types';
+import type { UtilityCostSet } from '@/types';
 
 interface UtilityCostsState {
-  costs: UtilCost[];
-  setCosts: (costs: UtilCost[]) => void;
-  updateCost: (type: UtilCost['type'], price: number) => void;
-  getCost: (type: UtilCost['type']) => number;
+  costSets: UtilityCostSet[];
+  addCostSet: (costSet: Omit<UtilityCostSet, 'id'>) => UtilityCostSet;
+  updateCostSet: (id: number, updates: Partial<Omit<UtilityCostSet, 'id'>>) => void;
+  deleteCostSet: (id: number) => void;
+  importCostSets: (costSets: UtilityCostSet[]) => void;
 }
 
-const defaultCosts: UtilCost[] = [
-  { type: 'electric', price: 0 },
-  { type: 'water', price: 0 },
-  { type: 'garbage', price: 0 },
-];
+const defaultCostSet: UtilityCostSet = {
+  id: 1,
+  name: 'Default Costs',
+  electricityCost: 3.7,
+  waterCost: 5,
+  garbageCost: 60,
+};
 
 export const useUtilityCostsStore = create<UtilityCostsState>((set, get) => ({
-  costs: defaultCosts,
+  costSets: [defaultCostSet],
   
-  setCosts: (costs) => {
-    // Ensure all utility types are present
-    const newCosts = [...costs];
-    defaultCosts.forEach(defaultCost => {
-      if (!newCosts.some(cost => cost.type === defaultCost.type)) {
-        newCosts.push(defaultCost);
-      }
-    });
-    set({ costs: newCosts });
+  addCostSet: (costSet) => {
+    // Find the highest id
+    const maxId = get().costSets.reduce((max, set) => Math.max(max, set.id), 0);
+    // Create new cost set with next id
+    const newCostSet = { ...costSet, id: maxId + 1 };
+    set((state) => ({ costSets: [...state.costSets, newCostSet] }));
+    return newCostSet;
   },
   
-  updateCost: (type, price) => set((state) => ({
-    costs: state.costs.map(cost => 
-      cost.type === type ? { ...cost, price } : cost
+  updateCostSet: (id, updates) => set((state) => ({
+    costSets: state.costSets.map((set) =>
+      set.id === id ? { ...set, ...updates } : set
     ),
   })),
   
-  getCost: (type) => {
-    const cost = get().costs.find(c => c.type === type);
-    return cost?.price ?? 0;
+  deleteCostSet: (id) => set((state) => ({
+    costSets: state.costSets.filter((set) => set.id !== id),
+  })),
+  
+  importCostSets: (costSets) => {
+    // If no cost sets provided, keep the default
+    if (!costSets || costSets.length === 0) {
+      set({ costSets: [defaultCostSet] });
+      return;
+    }
+    
+    // Otherwise use the imported cost sets
+    set({ costSets });
   },
 }));

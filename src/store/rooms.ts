@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import type { Room, ExportData } from '@/types';
-import { exportToJson, importFromJson } from '@/utils/export';
-import { useUtilityCostsStore } from './utility-costs';
+import type { Room } from '@/types';
 
 interface RoomsState {
   // Persistent room data
@@ -9,8 +7,6 @@ interface RoomsState {
   setRooms: (rooms: Room[]) => void;
   updateRooms: (updatedRooms: Room[]) => void;
   getRemainingRooms: (excludeRoomNames: string[]) => Room[];
-  exportData: () => Promise<void>;
-  importData: (file: File) => Promise<ExportData>;
   // New CRUD operations
   addRoom: (room: Room) => void;
   editRoom: (roomName: string, updates: Partial<Room>) => void;
@@ -32,34 +28,6 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
   getRemainingRooms: (excludeRoomNames) => {
     const { rooms } = get();
     return rooms.filter(room => !excludeRoomNames.includes(room.roomName));
-  },
-  
-  exportData: async () => {
-    const { rooms } = get();
-    const { costs } = useUtilityCostsStore.getState();
-    try {
-      await exportToJson(rooms, costs);
-    } catch (error) {
-      console.error('Failed to export data:', error);
-      throw error;
-    }
-  },
-  
-  importData: async (file: File) => {
-    try {
-      const data = await importFromJson(file);
-      
-      // Update rooms
-      set({ rooms: data.rooms });
-      
-      // Update utility costs
-      useUtilityCostsStore.getState().setCosts(data.utilityCosts);
-      
-      return data;
-    } catch (error) {
-      console.error('Failed to import data:', error);
-      throw error;
-    }
   },
 
   // New CRUD operations

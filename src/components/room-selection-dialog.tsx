@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Room } from '@/types';
 
 interface RoomSelectionDialogProps {
@@ -100,50 +101,45 @@ export function RoomSelectionDialog({
             )}
           </div>
 
-          <Tabs 
-            value={activeBlock} 
-            onValueChange={setActiveBlock}
-            className="w-full space-y-6"
-          >
-            <div className="border-b">
-              <TabsList className="h-10 items-center justify-start w-full rounded-none bg-transparent p-0">
-                {blockGroups.map(({ blockNumber }) => (
-                  <TabsTrigger
-                    key={blockNumber}
-                    value={blockNumber}
-                    className="relative h-10 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground"
-                  >
-                    Block {blockNumber}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
+          <ScrollArea className="h-[400px] rounded-md">
+            <Tabs 
+              defaultValue={blockGroups[0]?.blockNumber} 
+              value={activeBlock} 
+              onValueChange={setActiveBlock}
+            >
+              <ScrollArea className="max-w-full overflow-x-auto">
+                <TabsList className="flex space-x-2">
+                  {blockGroups.map((group) => (
+                    <TabsTrigger key={group.blockNumber} value={group.blockNumber}>
+                      Block {group.blockNumber}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
 
-            {blockGroups.map(({ blockNumber, rooms, isAllSelected }) => (
-              <TabsContent 
-                key={blockNumber} 
-                value={blockNumber}
-                className="rounded-md border shadow-sm"
-              >
-                <div className="p-4 space-y-4">
+              {blockGroups.map((group) => (
+                <TabsContent 
+                  key={group.blockNumber} 
+                  value={group.blockNumber} 
+                  className="space-y-4"
+                >
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id={`block-${blockNumber}`}
-                      checked={isAllSelected}
+                      id={`block-${group.blockNumber}`}
+                      checked={group.isAllSelected}
                       onCheckedChange={(checked) => 
-                        handleBlockSelect(blockNumber, checked === true)
+                        handleBlockSelect(group.blockNumber, checked === true)
                       }
                     />
                     <label
-                      htmlFor={`block-${blockNumber}`}
+                      htmlFor={`block-${group.blockNumber}`}
                       className="text-sm font-medium leading-none"
                     >
-                      Select All in Block {blockNumber}
+                      Select All Block {group.blockNumber}
                     </label>
                   </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 ml-6">
-                    {rooms.map((room) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pr-4">
+                    {group.rooms.map((room) => (
                       <div key={room.roomName} className="flex items-center space-x-2">
                         <Checkbox
                           id={room.roomName}
@@ -156,24 +152,24 @@ export function RoomSelectionDialog({
                           htmlFor={room.roomName}
                           className="text-sm leading-none"
                         >
-                          Room {room.roomName}
+                          {room.roomName}
                         </label>
                       </div>
                     ))}
                   </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </ScrollArea>
+        </div>
 
-          <div className="flex justify-end space-x-2 mt-6">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm} disabled={selectedRooms.size === 0}>
-              Add Selected ({selectedRooms.size})
-            </Button>
-          </div>
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={selectedRooms.size === 0}>
+            Add Selected ({selectedRooms.size})
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
