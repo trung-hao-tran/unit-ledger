@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Room, UtilityCostSet, PrintingOptions, PrintingData } from '@/types';
-import { generateInvoicePDF, generateTotalSheetPDF } from '@/lib/pdf-generator';
+import { generateInvoicePDF, generateTotalSheetPDF, generateReceivingSheetPDF } from '@/lib/pdf-generator';
 import { useUtilityCostsStore } from '@/store/utility-costs';
 import { EditUtilityCostDialog } from '@/components/edit-utility-cost-dialog';
 import { AddUtilityCostDialog } from '@/components/add-utility-cost-dialog';
@@ -43,7 +43,8 @@ export function PrintingStage({
     return {
       types: {
         invoice: true,
-        total: false
+        total: false,
+        receivingSheet: true
       },
       bottomUp: false,
       includeDate: true,
@@ -126,7 +127,8 @@ export function PrintingStage({
         printDate: printingOptions.selectedDate,
         printTypes: {
           invoice: printingOptions.types.invoice,
-          total: printingOptions.types.total
+          total: printingOptions.types.total,
+          receivingSheet: printingOptions.types.receivingSheet
         },
         totalSheetOptions: {
           bottomUp: printingOptions.bottomUp,
@@ -164,6 +166,18 @@ export function PrintingStage({
       URL.revokeObjectURL(totalUrl);
     }
 
+    if (printingOptions.types.receivingSheet) {
+      generateReceivingSheetPDF(printData).then((pdfData) => {
+        const blob = new Blob([pdfData], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receiving_sheet_${new Date().toISOString()}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
     // Notify parent about the print without closing the print mode
     onPrint({
       selectedRooms: selectedRoomsList,
@@ -172,7 +186,7 @@ export function PrintingStage({
     });
   };
 
-  const isAnyTypeSelected = printingOptions.types.invoice || printingOptions.types.total;
+  const isAnyTypeSelected = printingOptions.types.invoice || printingOptions.types.total || printingOptions.types.receivingSheet;
 
   return (
     <div className="space-y-4">
@@ -434,6 +448,24 @@ export function PrintingStage({
                           Bao gồm dãy/ngày
                         </Label>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={printingOptions.types.receivingSheet}
+                        onCheckedChange={(checked) => {
+                          setPrintingOptions(prev => ({
+                            ...prev,
+                            types: {
+                              ...prev.types,
+                              receivingSheet: checked as boolean
+                            }
+                          }));
+                        }}
+                      />
+                      <Label>Tờ thu</Label>
                     </div>
                   </div>
                 </div>

@@ -90,6 +90,7 @@ export interface PrintingOptions {
   types: {
     invoice: boolean;
     total: boolean;
+    receivingSheet: boolean;
   };
   bottomUp: boolean;
   includeDate: boolean;
@@ -125,6 +126,7 @@ export interface PrintUtilityData {
   printTypes: {
     invoice: boolean;
     total: boolean;
+    receivingSheet: boolean;
   };
   totalSheetOptions?: {
     bottomUp: boolean;

@@ -314,13 +314,14 @@ function drawInvoice(
 
   // Calculation
   const electricityUsage = room.currentElectric - room.previousElectric;
+  const roundedElectricityCost = Math.ceil(electricityUsage * utility.electricityCost);
   doc.text(
     `${electricityUsage} x ${formatVND(utility.electricityCost)} =`,
     x + indent * 2 + colWidth,
     currentY
   );
   doc.text(
-    formatVND(electricityUsage * utility.electricityCost),
+    formatVND(roundedElectricityCost),
     x + INVOICE_WIDTH - 10,
     currentY,
     { align: 'right' }
@@ -377,7 +378,7 @@ function drawInvoice(
   currentY += lineHeight * 2;
 
   // Calculate total with rounding up
-  const subtotal = (electricityUsage * utility.electricityCost) +
+  const subtotal = roundedElectricityCost +
                   (waterUsage * utility.waterCost) +
                   room.roomPrice +
                   utility.garbageCost;
@@ -402,4 +403,104 @@ function drawInvoice(
   doc.text('Nếu không báo, nhà trọ không hoàn cọc.', footerX, currentY, { align: 'center' });
   currentY += lineHeight + 1;
   doc.text('TK: ACB 999 85 86 NGUYỄN MINH HOÀNG', footerX, currentY, { align: 'center' });
+}
+
+export async function generateReceivingSheetPDF(data: PrintingData): Promise<Uint8Array> {
+  // Create a new PDF document in landscape
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  // Set Roboto font
+  doc.setFont('Roboto-Regular', 'normal');
+
+  receivingSheet(doc, data.rooms, data);
+
+  // Get ArrayBuffer and convert to Uint8Array
+  const arrayBuffer = doc.output('arraybuffer');
+  return new Uint8Array(arrayBuffer);
+}
+
+function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) {
+  const { utility } = data;
+  const lineHeight = 8;
+  const columnWidth = 30;
+  const startX = 5;
+  const startY = 10;
+  const bottomMargin = 5; // Reduced bottom margin
+  const blockGap = lineHeight * 1.5; // Gap between blocks
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const maxColumnsPerPage = Math.floor((pageWidth - startX) / columnWidth);
+  
+  let currentX = startX;
+  let currentY = startY;
+  let currentColumn = 0;
+
+  doc.setFontSize(12);
+
+  // Group rooms by block
+  const blockGroups = rooms.reduce<Record<string, PrintRoomData[]>>((acc, room) => {
+    const blockNumber = room.blockNumber;
+    if (!acc[blockNumber]) {
+      acc[blockNumber] = [];
+    }
+    acc[blockNumber].push(room);
+    return acc;
+  }, {});
+
+  // Sort blocks and process each block
+  Object.entries(blockGroups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([_, blockRooms]) => {
+      // Sort rooms within block by room number
+      blockRooms
+        .sort((a, b) => a.roomNumber - b.roomNumber)
+        .forEach((room) => {
+          // Check if we need to move to next column
+          if (currentY + lineHeight > pageHeight - bottomMargin) {
+            currentY = startY;
+            currentX += columnWidth;
+            currentColumn++;
+
+            // If we've filled all columns, start a new page
+            if (currentColumn >= maxColumnsPerPage) {
+              doc.addPage();
+              currentX = startX;
+              currentY = startY;
+              currentColumn = 0;
+            }
+          }
+
+          const electricityUsage = room.currentElectric - room.previousElectric;
+          const roundedElectricityCost = Math.ceil(electricityUsage * utility.electricityCost);
+          const waterUsage = room.currentWater - room.previousWater;
+          const total = roundedElectricityCost +
+                      (waterUsage * utility.waterCost) +
+                      room.roomPrice +
+                      utility.garbageCost;
+
+          doc.text(`${room.roomName}: ${total}`, currentX, currentY);
+          currentY += lineHeight;
+      });
+
+      // Add gap after each block, but check if we need to move to next column
+      if (currentY + blockGap > pageHeight - bottomMargin) {
+        currentY = startY;
+        currentX += columnWidth;
+        currentColumn++;
+
+        // If we've filled all columns, start a new page
+        if (currentColumn >= maxColumnsPerPage) {
+          doc.addPage();
+          currentX = startX;
+          currentY = startY;
+          currentColumn = 0;
+        }
+      } else {
+        currentY += blockGap; // Add gap between blocks
+      }
+  });
 }
