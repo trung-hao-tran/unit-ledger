@@ -86,13 +86,13 @@ export function RoomSelectionDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-6xl p-6">
         <DialogHeader>
-          <DialogTitle>Select Rooms</DialogTitle>
+          <DialogTitle>Chọn Phòng</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="p-3 bg-muted rounded-lg">
             <p className="text-sm font-medium">
-              Selected: {selectedRooms.size} rooms
+              Đã chọn: {selectedRooms.size} phòng
             </p>
             {selectedRoomsList.length > 0 && (
               <p className="text-sm text-muted-foreground mt-1">
@@ -111,7 +111,7 @@ export function RoomSelectionDialog({
                 <TabsList className="flex space-x-2">
                   {blockGroups.map((group) => (
                     <TabsTrigger key={group.blockNumber} value={group.blockNumber}>
-                      Block {group.blockNumber}
+                      Dãy {group.blockNumber}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -135,7 +135,7 @@ export function RoomSelectionDialog({
                       htmlFor={`block-${group.blockNumber}`}
                       className="text-sm font-medium leading-none"
                     >
-                      Select All Block {group.blockNumber}
+                      Chọn Tất Cả Dãy {group.blockNumber}
                     </label>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-10 gap-2 pr-4">
@@ -165,10 +165,10 @@ export function RoomSelectionDialog({
 
         <div className="flex justify-end space-x-2 mt-6">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={handleConfirm} disabled={selectedRooms.size === 0}>
-            Add Selected ({selectedRooms.size})
+            Thêm Phòng Đã Chọn ({selectedRooms.size})
           </Button>
         </div>
       </DialogContent>

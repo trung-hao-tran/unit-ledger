@@ -10,6 +10,7 @@ export function Toolbar({
   calculationButtonClass,
   printButtonClass,
   printButtonText = "Print",
+  isPrinting,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,23 +54,27 @@ export function Toolbar({
           className="hidden"
         />
         <Button variant="outline" onClick={triggerFileInput}>
-          Import
+          Tải file
         </Button>
         <Button variant="outline" onClick={handleExport}>
-          Export
+          Xuất file
         </Button>
-        <Button
-          onClick={onToggleCalculation}
-          className={calculationButtonClass}
-        >
-          {isCalculating ? "Exit Calculation" : "Start Calculation"}
-        </Button>
-        <Button
-          onClick={onPrint}
-          className={printButtonClass}
-        >
-          {printButtonText}
-        </Button>
+        {!isCalculating && (
+          <Button
+            onClick={onPrint}
+            className={printButtonClass}
+          >
+            {printButtonText === "Print" ? "In" : "Thoát"}
+          </Button>
+        )}
+        {!isPrinting && (
+          <Button
+            onClick={onToggleCalculation}
+            className={calculationButtonClass}
+          >
+            {isCalculating ? "Thoát" : "Thêm điện nước tháng mới"}
+          </Button>
+        )}
       </div>
     </div>
   );

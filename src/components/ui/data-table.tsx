@@ -62,7 +62,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center gap-4">
         <div className="flex-1 flex items-center gap-4">
           <Input
-            placeholder="Filter rooms..."
+            placeholder="Lọc phòng..."
             value={(table.getColumn('roomName')?.getFilterValue() as string) ?? ''}
             onChange={(event) =>
               table.getColumn('roomName')?.setFilterValue(event.target.value)
@@ -76,13 +76,13 @@ export function DataTable<TData, TValue>({
             }}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select block" />
+              <SelectValue placeholder="Chọn dãy" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All blocks</SelectItem>
+              <SelectItem value="all">Tất cả dãy</SelectItem>
               {sortedBlockNumbers.map((block) => (
                 <SelectItem key={block} value={block}>
-                  Block {block}
+                  Dãy {block}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -90,7 +90,7 @@ export function DataTable<TData, TValue>({
         </div>
         {onAddNew && (
           <Button onClick={onAddNew} className="whitespace-nowrap">
-            <PlusIcon className="mr-2 h-4 w-4" /> Add Room
+            <PlusIcon className="mr-2 h-4 w-4" /> Thêm Phòng
           </Button>
         )}
       </div>

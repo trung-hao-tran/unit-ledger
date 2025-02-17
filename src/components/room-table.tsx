@@ -73,33 +73,33 @@ export function RoomTable({ rooms }: RoomTableProps) {
   const columns: ColumnDef<Room>[] = [
     {
       accessorKey: 'roomName',
-      header: 'Room Name',
+      header: 'Phòng',
       filterFn: fuzzyFilter,
       enableColumnFilter: true,
     },
     {
       accessorKey: 'roomPrice',
-      header: 'Price',
+      header: 'Giá Phòng',
     },
     {
       accessorKey: 'currentElectric',
-      header: 'Current Electric',
+      header: 'Điện Hiện Tại',
     },
     {
       accessorKey: 'previousElectric',
-      header: 'Previous Electric',
+      header: 'Điện Trước Đó',
     },
     {
       accessorKey: 'currentWater',
-      header: 'Current Water',
+      header: 'Nước Hiện Tại',
     },
     {
       accessorKey: 'previousWater',
-      header: 'Previous Water',
+      header: 'Nước Trước Đó',
     },
     {
       accessorKey: 'updatedAt',
-      header: 'Last Updated',
+      header: 'Lần Cập Nhật Cuối',
       cell: ({ row }) => {
         const date = new Date(row.getValue('updatedAt'));
         return date.toLocaleDateString();
@@ -134,7 +134,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
     // Hidden column for block filtering
     {
       accessorKey: 'blockNumber',
-      header: 'Block',
+      header: 'Khu',
       filterFn: fuzzyFilter,
       enableColumnFilter: true,
     },
@@ -167,16 +167,16 @@ export function RoomTable({ rooms }: RoomTableProps) {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the room
-                and all its data.
+                Hành động này không thể hoàn tác. Điều này sẽ xóa vĩnh viễn phòng
+                và tất cả dữ liệu của nó.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Hủy</AlertDialogCancel>
               <AlertDialogAction onClick={handleConfirmDelete}>
-                Delete
+                Xóa
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

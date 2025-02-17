@@ -69,16 +69,16 @@ export function PreparationStage({
     <div className="w-full flex justify-center">
       <div className="max-w-4xl w-full space-y-4 p-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Select Rooms</h2>
+          <h2 className="text-lg font-semibold">Chọn Phòng</h2>
           <div className="space-x-2">
             <Button variant="outline" onClick={onCancel}>
-              Cancel
+              Hủy
             </Button>
             <Button 
               onClick={handleConfirm}
               disabled={selectedRooms.size === 0}
             >
-              Continue
+              Tiếp tục
             </Button>
           </div>
         </div>
@@ -98,7 +98,7 @@ export function PreparationStage({
                   htmlFor={`block-${group.blockNumber}`}
                   className="text-sm font-medium leading-none"
                 >
-                  Block {group.blockNumber}
+                  Dãy {group.blockNumber}
                 </label>
               </div>
 

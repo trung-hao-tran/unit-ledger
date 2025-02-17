@@ -54,9 +54,9 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
     const parsed = parseRoomName(value);
     
     if (!value.trim()) {
-      setRoomNameError('Room name is required');
+      setRoomNameError('Phải có tên phòng');
     } else if (!parsed) {
-      setRoomNameError('Room name must be a letter followed by numbers (e.g., A1, b2)');
+      setRoomNameError('Tên phòng phải là một chữ cái theo sau là số (ví dụ: A1, b2)');
     } else {
       // Check for duplicate room name
       const upperValue = value.toUpperCase();
@@ -65,7 +65,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
       );
       
       if (roomExists) {
-        setRoomNameError('A room with this name already exists');
+        setRoomNameError('Phòng này đã tồn tại');
       }
     }
 
@@ -89,13 +89,13 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
     
     // Validate room name
     if (!formData.roomName?.trim()) {
-      setRoomNameError('Room name is required');
+      setRoomNameError('Phải có tên phòng');
       return;
     }
 
     const parsed = parseRoomName(formData.roomName);
     if (!parsed) {
-      setRoomNameError('Room name must be a letter followed by numbers (e.g., A1, b2)');
+      setRoomNameError('Tên phòng phải là một chữ cái theo sau là số (ví dụ: A1, b2)');
       return;
     }
 
@@ -106,7 +106,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
     );
     
     if (roomExists) {
-      setRoomNameError('A room with this name already exists');
+      setRoomNameError('Phòng này đã tồn tại');
       return;
     }
 
@@ -115,7 +115,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
     for (const field of numericFields) {
       const value = formData[field];
       if (typeof value !== 'number' || value < 0) {
-        alert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} must be a positive number`);
+        alert(`${field.replace(/([A-Z])/g, ' $1').toLowerCase()} phải là một số dương`);
         return;
       }
     }
@@ -138,20 +138,20 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg w-[425px] max-h-[90vh] overflow-y-auto">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg w-[550px] max-h-[90vh] overflow-y-auto">
           <Dialog.Title className="text-lg font-semibold mb-4">
-            {isEditMode ? 'Edit Room' : 'Add New Room'}
+            {isEditMode ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
           </Dialog.Title>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="roomName" className="text-right">Room Name</Label>
+                <Label htmlFor="roomName" className="text-right">Phòng</Label>
                 <div className="col-span-3 space-y-2">
                   <Input
                     id="roomName"
                     value={formData.roomName}
                     onChange={(e) => handleRoomNameChange(e.target.value)}
-                    placeholder="e.g., A1, B2"
+                    placeholder="ví dụ: A1, B2"
                     className={roomNameError ? "border-red-500" : ""}
                   />
                   {roomNameError && (
@@ -160,7 +160,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="roomPrice" className="text-right">Room Price</Label>
+                <Label htmlFor="roomPrice" className="text-right">Giá phòng</Label>
                 <Input
                   id="roomPrice"
                   type="number"
@@ -173,7 +173,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="currentElectric" className="text-right">Current Electric</Label>
+                <Label htmlFor="currentElectric" className="text-right">Điện hiện tại</Label>
                 <Input
                   id="currentElectric"
                   type="number"
@@ -185,7 +185,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="currentWater" className="text-right">Current Water</Label>
+                <Label htmlFor="currentWater" className="text-right">Nước hiện tại</Label>
                 <Input
                   id="currentWater"
                   type="number"
@@ -199,7 +199,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
               {isEditMode && (
                 <>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="previousElectric" className="text-right">Previous Electric</Label>
+                    <Label htmlFor="previousElectric" className="text-right">Điện trước đó</Label>
                     <Input
                       id="previousElectric"
                       type="number"
@@ -211,7 +211,7 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="previousWater" className="text-right">Previous Water</Label>
+                    <Label htmlFor="previousWater" className="text-right">Nước trước đó</Label>
                     <Input
                       id="previousWater"
                       type="number"
@@ -227,9 +227,9 @@ export function RoomDialog({ isOpen, onClose, onSave, room }: RoomDialogProps) {
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
+                Hủy bỏ
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit">Lưu</Button>
             </div>
           </form>
         </Dialog.Content>

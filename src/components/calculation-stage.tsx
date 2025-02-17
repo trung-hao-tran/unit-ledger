@@ -164,19 +164,19 @@ export function CalculationStage({
     <div className="w-full flex justify-center">
       <div className="max-w-4xl w-full space-y-4 p-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Update Utility Readings</h2>
+          <h2 className="text-lg font-semibold">Cập nhật chỉ số điện nước</h2>
           <div className="space-x-2">
             <Button 
               variant="outline"
               onClick={() => setIsSelectionOpen(true)}
             >
-              Add Rooms
+              Thêm phòng
             </Button>
             <Button variant="outline" onClick={onCancel}>
-              Cancel
+              Hủy
             </Button>
             <Button onClick={handleSave}>
-              Save Changes
+              Lưu
             </Button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export function CalculationStage({
                   value={blockNumber}
                   className="relative h-10 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground"
                 >
-                  Block {blockNumber}
+                  Dãy {blockNumber}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -211,13 +211,13 @@ export function CalculationStage({
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="p-2 text-left">Room</th>
-                        <th className="p-2 text-left">Price</th>
-                        <th className="p-2 text-left">Current Electric</th>
-                        <th className="p-2 text-left">New Electric</th>
-                        <th className="p-2 text-left">Current Water</th>
-                        <th className="p-2 text-left">New Water</th>
-                        <th className="p-2 text-left">Actions</th>
+                        <th className="p-2 text-left">Phòng</th>
+                        <th className="p-2 text-left">Giá Phòng</th>
+                        <th className="p-2 text-left">Điện hiện tại</th>
+                        <th className="p-2 text-left">Điện mới</th>
+                        <th className="p-2 text-left">Nước hiện tại</th>
+                        <th className="p-2 text-left">Nước mới</th>
+                        <th className="p-2 text-left"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -258,6 +258,7 @@ export function CalculationStage({
                                   handleInputChange(room.roomName, 'newElectric', Number(e.target.value))
                                 }
                                 className={`w-24 ${validationErrors[room.roomName]?.has('newElectric') ? 'border-red-500' : ''}`}
+                                placeholder="Điện mới"
                                 min="0"
                               />
                             </td>
@@ -281,6 +282,7 @@ export function CalculationStage({
                                   handleInputChange(room.roomName, 'newWater', Number(e.target.value))
                                 }
                                 className={`w-24 ${validationErrors[room.roomName]?.has('newWater') ? 'border-red-500' : ''}`}
+                                placeholder="Nước mới"
                                 min="0"
                               />
                             </td>

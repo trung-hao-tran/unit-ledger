@@ -14,6 +14,7 @@ import { Pencil, Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from "date-fns";
+import { vi } from 'date-fns/locale';
 
 interface PrintingStageProps {
   rooms: Room[];
@@ -134,7 +135,7 @@ export function PrintingStage({
       }
     };
 
-    const dateStr = format(printingOptions.selectedDate, 'yyyy-MM-dd');
+    const dateStr = format(printingOptions.selectedDate, 'yyyy-MM-dd', { locale: vi });
 
     // Generate PDFs based on selected types
     if (printingOptions.types.invoice) {
@@ -175,29 +176,29 @@ export function PrintingStage({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Print Documents</h2>
+      <div className="flex justify-between items-center p-4">
+        <h2 className="text-lg font-semibold">Tùy Chọn In</h2>
         <div className="space-x-2">
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            Hủy
           </Button>
           <Button 
             onClick={handlePrint}
             disabled={!selectedCostSet || selectedRooms.size === 0 || !isAnyTypeSelected}
           >
-            Print
+            In
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-4">
         {/* Left Column - Room Selection */}
         <div className="space-y-4">
           <div className="border p-4 rounded-md">
-            <h3 className="font-medium mb-2">Room Selection</h3>
+            <h3 className="font-medium mb-2">Chọn Phòng</h3>
             <div className="p-3 bg-muted rounded-lg mb-4">
               <p className="text-sm font-medium">
-                Selected: {selectedRooms.size} rooms
+                Đã chọn: {selectedRooms.size} phòng
               </p>
               {selectedRoomsList.length > 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
@@ -220,7 +221,7 @@ export function PrintingStage({
                       htmlFor={`block-${group.blockNumber}`}
                       className="text-sm font-medium"
                     >
-                      Block {group.blockNumber}
+                      Dãy {group.blockNumber}
                     </Label>
                   </div>
                   <div className="ml-6 grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -237,7 +238,7 @@ export function PrintingStage({
                           htmlFor={room.roomName}
                           className="text-sm"
                         >
-                          Room {room.roomNumber}
+                          {room.roomName}
                         </Label>
                       </div>
                     ))}
@@ -251,7 +252,7 @@ export function PrintingStage({
         {/* Right Column - Utility Cost Set and Options */}
         <div className="space-y-4">
           <div className="border p-4 rounded-md space-y-4">
-            <h3 className="font-medium">Utility Cost Set</h3>
+            <h3 className="font-medium">Bộ Giá Tiện Ích</h3>
             <div className="flex gap-2">
               <Select
                 value={selectedCostSet?.id.toString()}
@@ -267,7 +268,7 @@ export function PrintingStage({
                 }}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a cost set" />
+                  <SelectValue placeholder="Chọn bộ giá" />
                 </SelectTrigger>
                 <SelectContent>
                   {costSets.map((costSet) => (
@@ -278,7 +279,7 @@ export function PrintingStage({
                   <SelectItem value="new" className="text-primary">
                     <span className="flex items-center gap-2">
                       <Plus className="h-4 w-4" />
-                      Add New Cost Set
+                      Thêm Bộ Giá Mới
                     </span>
                   </SelectItem>
                 </SelectContent>
@@ -305,15 +306,15 @@ export function PrintingStage({
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Electricity:</span>
+                      <span>Điện:</span>
                       <span>{selectedCostSet.electricityCost}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Water:</span>
+                      <span>Nước:</span>
                       <span>{selectedCostSet.waterCost}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Garbage:</span>
+                      <span>Rác:</span>
                       <span>{selectedCostSet.garbageCost}</span>
                     </div>
                   </div>
@@ -323,11 +324,11 @@ export function PrintingStage({
           </div>
 
           <div className="border p-4 rounded-md">
-            <h3 className="font-medium mb-4">Custom Options</h3>
+            <h3 className="font-medium mb-4">Tùy Chọn In</h3>
             <div className="space-y-6">
               {/* Date Selection */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Print Date</Label>
+                <Label className="text-sm font-medium">Ngày In</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -339,14 +340,15 @@ export function PrintingStage({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {printingOptions.selectedDate ? (
-                        format(printingOptions.selectedDate, "PPP")
+                        format(printingOptions.selectedDate, "PPP", { locale: vi })
                       ) : (
-                        <span>Pick a date</span>
+                        <span>Chọn ngày</span>
                       )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
+                    locale={vi}
                       mode="single"
                       selected={printingOptions.selectedDate}
                       onSelect={(date) => {
@@ -363,7 +365,7 @@ export function PrintingStage({
 
               {/* Printing Type */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium">Printing Type</Label>
+                <Label className="text-sm font-medium">Kiểu In</Label>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -379,7 +381,7 @@ export function PrintingStage({
                           }));
                         }}
                       />
-                      <Label>Invoice</Label>
+                      <Label>Hóa đơn</Label>
                     </div>
                   </div>
 
@@ -397,7 +399,7 @@ export function PrintingStage({
                           }));
                         }}
                       />
-                      <Label>Total Sheet</Label>
+                      <Label>Tờ tổng</Label>
                     </div>
 
                     <div className="ml-6 space-y-2">
@@ -413,7 +415,7 @@ export function PrintingStage({
                           }}
                         />
                         <Label className={!printingOptions.types.total ? "text-muted-foreground" : ""}>
-                          Bottom Up
+                          In từ dưới lên
                         </Label>
                       </div>
 
@@ -429,7 +431,7 @@ export function PrintingStage({
                           }}
                         />
                         <Label className={!printingOptions.types.total ? "text-muted-foreground" : ""}>
-                          Include Date
+                          Bao gồm dãy/ngày
                         </Label>
                       </div>
                     </div>
