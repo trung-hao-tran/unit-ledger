@@ -288,7 +288,7 @@ export function PrintingStage({
                     setSelectedRooms(calculatedRoomNames);
                   }}
                 >
-                  Chọn phòng đã tính
+                  Chọn phòng vừa tính hôm nay
                 </Button>
               )}
             </div>
@@ -558,6 +558,7 @@ export function PrintingStage({
             <div className="mt-8 flex justify-end space-x-2">
             <Button 
                 variant="outline" 
+                
                 onClick={onCancel}
               >
                 Thoát

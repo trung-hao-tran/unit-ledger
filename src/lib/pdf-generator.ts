@@ -145,8 +145,8 @@ function drawTotalSheet(
     const waterCost = Math.ceil(waterUsage * data.utility.waterCost);
     
     return {
-      electric: acc.electric + electricUsage,
-      water: acc.water + waterUsage,
+      electric: acc.electric + electricCost,
+      water: acc.water + waterCost,
       garbage: acc.garbage + data.utility.garbageCost,
       rent: acc.rent + room.roomPrice,
       total: acc.total + electricCost + waterCost + data.utility.garbageCost + room.roomPrice
@@ -171,8 +171,8 @@ function drawTotalSheet(
     const cells = [
       data.utility.printDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
       room.roomName,
-      electricUsage.toString(),
-      waterUsage.toString(),
+      electricCost.toString(),
+      waterCost.toString(),
       data.utility.garbageCost.toString(),
       room.roomPrice.toString(),
       total.toString(),
