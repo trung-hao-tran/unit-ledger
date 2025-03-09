@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import type { ToolbarProps } from '@/types';
 import { exportToJson, importFromJson } from '@/utils/export';
+import { CloudInput } from '@/components/cloud-input';
 
 export function Toolbar({
   onPrint,
@@ -46,6 +47,7 @@ export function Toolbar({
   return (
     <div className="flex items-center justify-between p-4 border-b ">
       <div className="flex space-x-2">
+        <CloudInput />
         <input
           type="file"
           ref={fileInputRef}

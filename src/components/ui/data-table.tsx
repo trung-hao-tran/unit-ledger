@@ -9,6 +9,8 @@ import {
   ColumnFiltersState,
   VisibilityState,
   OnChangeFn,
+  getSortedRowModel,
+  SortingState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
 import {
@@ -18,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusIcon } from "@radix-ui/react-icons";
+import { PlusIcon, CaretSortIcon, ArrowUpIcon, ArrowDownIcon } from "@radix-ui/react-icons";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,18 +42,22 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange,
+    onSortingChange: setSorting,
     initialState,
     state: {
       columnFilters,
       columnVisibility: initialState?.columnVisibility,
+      sorting,
     },
   });
 
@@ -109,12 +115,31 @@ export function DataTable<TData, TValue>({
                       key={header.id}
                       className="h-10 px-2 text-left align-middle font-medium text-muted-foreground"
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={
+                            header.column.getCanSort()
+                              ? "flex items-center gap-1 cursor-pointer select-none"
+                              : ""
+                          }
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                          {header.column.getCanSort() && (
+                            <div className="ml-1">
+                              {{
+                                asc: <ArrowUpIcon className="h-4 w-4" />,
+                                desc: <ArrowDownIcon className="h-4 w-4" />,
+                              }[header.column.getIsSorted() as string] ?? (
+                                <CaretSortIcon className="h-4 w-4" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>

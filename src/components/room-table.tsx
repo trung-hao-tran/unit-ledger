@@ -76,30 +76,38 @@ export function RoomTable({ rooms }: RoomTableProps) {
       header: 'Phòng',
       filterFn: fuzzyFilter,
       enableColumnFilter: true,
+      enableSorting: true,
     },
     {
       accessorKey: 'roomPrice',
       header: 'Giá Phòng',
+      enableSorting: true,
     },
     {
       accessorKey: 'currentElectric',
       header: 'Điện Hiện Tại',
+      enableSorting: true,
     },
     {
       accessorKey: 'previousElectric',
       header: 'Điện Trước Đó',
+      enableSorting: true,
     },
     {
       accessorKey: 'currentWater',
       header: 'Nước Hiện Tại',
+      enableSorting: true,
     },
     {
       accessorKey: 'previousWater',
       header: 'Nước Trước Đó',
+      enableSorting: true,
     },
     {
       accessorKey: 'updatedAt',
       header: 'Lần Cập Nhật Cuối',
+      enableSorting: true,
+      sortingFn: 'datetime',
       cell: ({ row }) => {
         const date = new Date(row.getValue('updatedAt'));
         return date.toLocaleDateString();
@@ -107,6 +115,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
     },
     {
       id: 'actions',
+      enableSorting: false,
       cell: ({ row }) => {
         const room = row.original;
         return (
@@ -137,6 +146,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
       header: 'Khu',
       filterFn: fuzzyFilter,
       enableColumnFilter: true,
+      enableSorting: true,
     },
   ];
 

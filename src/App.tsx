@@ -4,6 +4,7 @@ import { Toolbar } from '@/components/toolbar';
 import { PreparationStage } from '@/components/preparation-stage';
 import { CalculationStage } from '@/components/calculation-stage';
 import { PrintingStage } from '@/components/printing-stage';
+import { Toaster } from '@/components/ui/toaster';
 import { useRoomsStore } from '@/store/rooms';
 import { useCalculationRoomsStore } from '@/store/calculation-rooms';
 import { useSessionStore } from '@/store/session';
@@ -174,6 +175,7 @@ function App() {
           printButtonText={calculationMode === 'printing' ? "Exit Printing" : "Print"}
         />
         {renderContent()}
+        <Toaster />
       </div>
     </div>
   );
