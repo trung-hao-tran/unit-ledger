@@ -155,7 +155,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
 
   return (
     <div className="w-full flex justify-center">
-      <div className="max-w-4xl w-full space-y-4 p-4">
+      <div className="max-w-6xl w-full space-y-4 p-4">
         <DataTable
           columns={columns}
           data={rooms}

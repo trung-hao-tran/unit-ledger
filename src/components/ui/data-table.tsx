@@ -1,5 +1,6 @@
 import { Input } from './input';
 import { Button } from './button';
+import { ScrollArea } from './scroll-area';
 import {
   ColumnDef,
   flexRender,
@@ -63,6 +64,22 @@ export function DataTable<TData, TValue>({
 
   const sortedBlockNumbers = [...blockNumbers].sort();
 
+  // Define column widths consistently for both header and body
+  const getColumnWidth = (columnId: string) => {
+    switch (columnId) {
+      case 'actions': return '80px';
+      case 'roomName': return '120px';
+      case 'roomPrice': return '120px';
+      case 'currentElectric': return '140px';
+      case 'previousElectric': return '140px';
+      case 'currentWater': return '140px';
+      case 'previousWater': return '140px';
+      case 'updatedAt': return '160px';
+      case 'blockNumber': return '120px';
+      default: return '120px';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -102,73 +119,86 @@ export function DataTable<TData, TValue>({
       </div>
       
       <div className="rounded-md border">
-        <div className="relative w-full overflow-auto">
-          <table className="w-full caption-bottom text-sm">
-            <thead className="[&_tr]:border-b">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr
-                  key={headerGroup.id}
-                  className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                >
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="h-10 px-2 text-left align-middle font-medium text-muted-foreground"
+        <ScrollArea className="w-full">
+          <div className="min-w-[900px]">
+            <div className="sticky top-0 z-10 bg-background">
+              <table className="w-full caption-bottom text-sm">
+                <thead className="[&_tr]:border-b">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr
+                      key={headerGroup.id}
+                      className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                     >
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={
-                            header.column.getCanSort()
-                              ? "flex items-center gap-1 cursor-pointer select-none"
-                              : ""
-                          }
-                          onClick={header.column.getToggleSortingHandler()}
+                      {headerGroup.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="h-10 px-4 text-center align-middle font-medium text-muted-foreground whitespace-nowrap"
+                          style={{ width: getColumnWidth(header.id) }}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getCanSort() && (
-                            <div className="ml-1">
-                              {{
-                                asc: <ArrowUpIcon className="h-4 w-4" />,
-                                desc: <ArrowDownIcon className="h-4 w-4" />,
-                              }[header.column.getIsSorted() as string] ?? (
-                                <CaretSortIcon className="h-4 w-4" />
+                          {header.isPlaceholder ? null : (
+                            <div
+                              className={
+                                header.column.getCanSort()
+                                  ? "flex items-center justify-center gap-1 cursor-pointer select-none"
+                                  : "flex items-center justify-center"
+                              }
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                              {header.column.getCanSort() && (
+                                <div className="ml-1">
+                                  {{
+                                    asc: <ArrowUpIcon className="h-4 w-4" />,
+                                    desc: <ArrowDownIcon className="h-4 w-4" />,
+                                  }[header.column.getIsSorted() as string] ?? (
+                                    <CaretSortIcon className="h-4 w-4" />
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
-                        </div>
-                      )}
-                    </th>
+                        </th>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="[&_tr:last-child]:border-0">
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-2 align-middle">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </thead>
+              </table>
+            </div>
+            <ScrollArea className="h-[calc(100vh-220px)] min-h-[400px]">
+              <table className="w-full caption-bottom text-sm">
+                <tbody className="[&_tr:last-child]:border-0">
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <td 
+                            key={cell.id} 
+                            className="p-4 text-center align-middle"
+                            style={{ width: getColumnWidth(cell.column.id) }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={columns.length} className="h-24 text-center">
+                        No results.
                       </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="h-24 text-center">
-                    No results.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
