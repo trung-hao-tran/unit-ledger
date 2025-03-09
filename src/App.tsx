@@ -6,6 +6,7 @@ import { CalculationStage } from '@/components/calculation-stage';
 import { PrintingStage } from '@/components/printing-stage';
 import { useRoomsStore } from '@/store/rooms';
 import { useCalculationRoomsStore } from '@/store/calculation-rooms';
+import { useSessionStore } from '@/store/session';
 import type { Room, UtilityCostSet, PrintingOptions } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -88,6 +89,8 @@ function App() {
 
   const handleSaveCalculations = (updatedRooms: Room[]) => {
     updateRooms(updatedRooms);
+    // Store the calculated rooms in session storage
+    useSessionStore.getState().setRecentlyCalculatedRooms(updatedRooms);
     setCalculationMode('none');
     clearCalculation();
   };

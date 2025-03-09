@@ -5,9 +5,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Room, UtilityCostSet, PrintingOptions, PrintingData } from '@/types';
 import { generateInvoicePDF, generateTotalSheetPDF, generateReceivingSheetPDF } from '@/lib/pdf-generator';
 import { useUtilityCostsStore } from '@/store/utility-costs';
+import { useSessionStore } from '@/store/session';
 import { EditUtilityCostDialog } from '@/components/edit-utility-cost-dialog';
 import { AddUtilityCostDialog } from '@/components/add-utility-cost-dialog';
 import { Pencil, Plus, Calendar as CalendarIcon } from 'lucide-react';
@@ -209,7 +211,22 @@ export function PrintingStage({
         {/* Left Column - Room Selection */}
         <div className="space-y-4">
           <div className="border p-4 rounded-md">
-            <h3 className="font-medium mb-2">Chọn Phòng</h3>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-medium">Chọn Phòng</h3>
+              {useSessionStore.getState().hasRecentlyCalculatedRooms() && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const recentRooms = useSessionStore.getState().recentlyCalculatedRooms;
+                    const recentRoomNames = new Set(recentRooms.map(room => room.roomName));
+                    setSelectedRooms(recentRoomNames);
+                  }}
+                >
+                  Chọn phòng vừa tính
+                </Button>
+              )}
+            </div>
             <div className="p-3 bg-muted rounded-lg mb-4">
               <p className="text-sm font-medium">
                 Đã chọn: {selectedRooms.size} phòng
@@ -220,9 +237,9 @@ export function PrintingStage({
                 </p>
               )}
             </div>
-            <div className="max-h-[400px] overflow-y-auto pr-2">
+            <ScrollArea className="h-[60vh]">
               {blockGroups.map((group) => (
-                <div key={group.blockNumber} className="space-y-2 mb-4">
+                <div key={group.blockNumber} className="space-y-2 mb-4 pr-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`block-${group.blockNumber}`}
@@ -259,7 +276,7 @@ export function PrintingStage({
                   </div>
                 </div>
               ))}
-            </div>
+            </ScrollArea>
           </div>
         </div>
 
