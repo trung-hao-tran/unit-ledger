@@ -56,10 +56,10 @@ export function Toolbar({
           className="hidden"
         />
         <Button variant="outline" onClick={triggerFileInput}>
-          Tải file
+          Tải file từ máy
         </Button>
         <Button variant="outline" onClick={handleExport}>
-          Xuất file
+          Xuất file ra máy
         </Button>
         {!isCalculating && (
           <Button

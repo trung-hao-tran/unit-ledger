@@ -42,7 +42,7 @@ export function CloudInput() {
         ) : (
           <Cloud className="h-4 w-4 mr-2" />
         )}
-        Tải
+        Tải từ cloud
       </Button>
       <Button 
         variant="outline" 
@@ -54,7 +54,7 @@ export function CloudInput() {
         ) : (
           <Save className="h-4 w-4 mr-2" />
         )}
-        Lưu
+        Lưu lên cloud
       </Button>
       <Separator orientation="vertical" className="h-8" />
     </div>

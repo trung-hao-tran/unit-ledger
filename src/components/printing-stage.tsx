@@ -28,6 +28,15 @@ interface PrintingStageProps {
   onCancel: () => void;
 }
 
+type GroupByOption = 'block' | 'date';
+
+interface RoomGroup {
+  key: string;
+  title: string;
+  rooms: Room[];
+  isAllSelected: boolean;
+}
+
 export function PrintingStage({
   rooms,
   onPrint,
@@ -39,6 +48,7 @@ export function PrintingStage({
   const [editingCostSet, setEditingCostSet] = useState<UtilityCostSet | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newCostSetDialogOpen, setNewCostSetDialogOpen] = useState(false);
+  const [groupBy, setGroupBy] = useState<GroupByOption>('date');
   const [printingOptions, setPrintingOptions] = useState<PrintingOptions>(() => {
     const now = new Date();
     const defaultDate = new Date(now.getFullYear(), now.getMonth(), 10);
@@ -61,22 +71,72 @@ export function PrintingStage({
     }
   }, [costSets, selectedCostSet]);
 
-  const blockGroups = useMemo(() => {
-    const groups = rooms.reduce((acc, room) => {
-      const block = acc.get(room.blockNumber) || [];
-      block.push(room);
-      acc.set(room.blockNumber, block);
-      return acc;
-    }, new Map<string, Room[]>());
-
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([blockNumber, rooms]) => ({
-        blockNumber,
-        rooms: rooms.sort((a, b) => a.roomNumber - b.roomNumber),
-        isAllSelected: rooms.every(room => selectedRooms.has(room.roomName)),
-      }));
-  }, [rooms, selectedRooms]);
+  const roomGroups = useMemo(() => {
+    const groups: RoomGroup[] = [];
+    
+    if (groupBy === 'block') {
+      // Group by block number
+      const blockMap = new Map<string, Room[]>();
+      
+      rooms.forEach(room => {
+        const block = room.blockNumber;
+        if (!blockMap.has(block)) {
+          blockMap.set(block, []);
+        }
+        blockMap.get(block)!.push(room);
+      });
+      
+      // Convert map to array and sort by block number
+      Array.from(blockMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([blockNumber, blockRooms]) => {
+          groups.push({
+            key: `block-${blockNumber}`,
+            title: `Dãy ${blockNumber}`,
+            rooms: blockRooms.sort((a, b) => a.roomNumber - b.roomNumber),
+            isAllSelected: blockRooms.every(room => selectedRooms.has(room.roomName))
+          });
+        });
+    } else {
+      // Group by update date
+      const dateMap = new Map<string, Room[]>();
+      
+      rooms.forEach(room => {
+        const date = new Date(room.updatedAt);
+        const dateKey = format(date, 'dd/MM/yyyy', { locale: vi });
+        
+        if (!dateMap.has(dateKey)) {
+          dateMap.set(dateKey, []);
+        }
+        dateMap.get(dateKey)!.push(room);
+      });
+      
+      // Convert map to array and sort by date (newest first)
+      Array.from(dateMap.entries())
+        .sort(([dateA], [dateB]) => {
+          // Parse dates in format dd/MM/yyyy
+          const [dayA, monthA, yearA] = dateA.split('/').map(Number);
+          const [dayB, monthB, yearB] = dateB.split('/').map(Number);
+          
+          // Compare years, then months, then days
+          if (yearA !== yearB) return yearB - yearA;
+          if (monthA !== monthB) return monthB - monthA;
+          return dayB - dayA;
+        })
+        .forEach(([dateKey, dateRooms]) => {
+          groups.push({
+            key: `date-${dateKey}`,
+            title: `Ngày ${dateKey}`,
+            rooms: dateRooms.sort((a, b) => 
+              a.blockNumber.localeCompare(b.blockNumber) || a.roomNumber - b.roomNumber
+            ),
+            isAllSelected: dateRooms.every(room => selectedRooms.has(room.roomName))
+          });
+        });
+    }
+    
+    return groups;
+  }, [rooms, selectedRooms, groupBy]);
 
   const handleRoomSelect = (roomName: string, checked: boolean) => {
     const newSelected = new Set(selectedRooms);
@@ -88,11 +148,13 @@ export function PrintingStage({
     setSelectedRooms(newSelected);
   };
 
-  const handleBlockSelect = (blockNumber: string, checked: boolean) => {
+  const handleGroupSelect = (groupKey: string, checked: boolean) => {
     const newSelected = new Set(selectedRooms);
-    const blockRooms = rooms.filter(room => room.blockNumber === blockNumber);
+    const group = roomGroups.find(g => g.key === groupKey);
     
-    blockRooms.forEach(room => {
+    if (!group) return;
+    
+    group.rooms.forEach(room => {
       if (checked) {
         newSelected.add(room.roomName);
       } else {
@@ -212,7 +274,21 @@ export function PrintingStage({
         <div className="space-y-4">
           <div className="border p-4 rounded-md">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium">Chọn Phòng</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium">Chọn Phòng</h3>
+                <Select
+                  value={groupBy}
+                  onValueChange={(value: GroupByOption) => setGroupBy(value)}
+                >
+                  <SelectTrigger className="w-[200px] h-8">
+                    <SelectValue placeholder="Xếp theo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Xếp theo ngày cập nhập</SelectItem>
+                    <SelectItem value="block">Xếp theo dãy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {useSessionStore.getState().hasCalculatedRooms() && (
                 <Button 
                   variant="outline" 
@@ -223,7 +299,7 @@ export function PrintingStage({
                     setSelectedRooms(calculatedRoomNames);
                   }}
                 >
-                  Chọn phòng vừa tính
+                  Chọn phòng đã tính
                 </Button>
               )}
             </div>
@@ -238,21 +314,21 @@ export function PrintingStage({
               )}
             </div>
             <ScrollArea className="h-[60vh]">
-              {blockGroups.map((group) => (
-                <div key={group.blockNumber} className="space-y-2 mb-4 pr-4">
+              {roomGroups.map((group) => (
+                <div key={group.key} className="space-y-2 mb-4 pr-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id={`block-${group.blockNumber}`}
+                      id={group.key}
                       checked={group.isAllSelected}
                       onCheckedChange={(checked) => 
-                        handleBlockSelect(group.blockNumber, checked === true)
+                        handleGroupSelect(group.key, checked === true)
                       }
                     />
                     <Label
-                      htmlFor={`block-${group.blockNumber}`}
+                      htmlFor={group.key}
                       className="text-sm font-medium"
                     >
-                      Dãy {group.blockNumber}
+                      {group.title}
                     </Label>
                   </div>
                   <div className="ml-6 grid grid-cols-2 sm:grid-cols-3 gap-2">
