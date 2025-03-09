@@ -302,14 +302,14 @@ function drawInvoice(
   doc.text('ĐIỆN:', x + indent, currentY);
   currentY += lineHeight;
   
+// Current reading
+doc.text('Số mới:', x + indent * 2, currentY);
+doc.text(room.currentElectric.toString(), x + indent * 2 + colWidth, currentY);
+currentY += lineHeight;
+
   // Previous reading
   doc.text('Số cũ:', x + indent * 2, currentY);
   doc.text(room.previousElectric.toString(), x + indent * 2 + colWidth, currentY);
-  currentY += lineHeight;
-  
-  // Current reading
-  doc.text('Số mới:', x + indent * 2, currentY);
-  doc.text(room.currentElectric.toString(), x + indent * 2 + colWidth, currentY);
   currentY += lineHeight;
 
   // Calculation
@@ -331,15 +331,15 @@ function drawInvoice(
   // Water section
   doc.text('NƯỚC:', x + indent, currentY);
   currentY += lineHeight;
+
+  // Current reading
+  doc.text('Số mới:', x + indent * 2, currentY);
+  doc.text(room.currentWater.toString(), x + indent * 2 + colWidth, currentY);
+  currentY += lineHeight;
   
   // Previous reading
   doc.text('Số cũ:', x + indent * 2, currentY);
   doc.text(room.previousWater.toString(), x + indent * 2 + colWidth, currentY);
-  currentY += lineHeight;
-  
-  // Current reading
-  doc.text('Số mới:', x + indent * 2, currentY);
-  doc.text(room.currentWater.toString(), x + indent * 2 + colWidth, currentY);
   currentY += lineHeight;
 
   // Calculation

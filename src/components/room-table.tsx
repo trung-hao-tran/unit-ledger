@@ -6,7 +6,7 @@ import { RoomDialog } from './room-dialog';
 import { useRoomsStore } from '@/store/rooms';
 import { Pencil2Icon, Cross2Icon } from '@radix-ui/react-icons';
 import type { Room } from '@/types';
-import { ColumnDef, FilterFn, VisibilityState, Updater } from '@tanstack/react-table';
+import { ColumnDef, FilterFn, VisibilityState, Updater, SortingFn } from '@tanstack/react-table';
 
 interface RoomTableProps {
   rooms: Room[];
@@ -20,6 +20,25 @@ const fuzzyFilter: FilterFn<Room> = (row, columnId, value) => {
   return false;
 };
 
+const getRoomSortingFn = <TData extends Room>(): SortingFn<TData> => {
+  return (rowA, rowB) => {
+    // First compare by block
+    const blockA = rowA.getValue('blockNumber') as string;
+    const blockB = rowB.getValue('blockNumber') as string;
+    const blockComparison = blockA.localeCompare(blockB);
+    
+    // If blocks are different, return block comparison
+    if (blockComparison !== 0) {
+      return blockComparison;
+    }
+    
+    // If blocks are the same, compare by room number
+    const roomA = rowA.getValue('roomNumber') as number;
+    const roomB = rowB.getValue('roomNumber') as number;
+    return roomA - roomB;
+  };
+};
+
 export function RoomTable({ rooms }: RoomTableProps) {
   const { editRoom, addRoom, deleteRoom } = useRoomsStore();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -27,6 +46,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     blockNumber: false, // Hide block number column by default
+    roomNumber: false, // Hide room number column by default
   });
 
   const handleColumnVisibilityChange = (updaterOrValue: Updater<VisibilityState>) => {
@@ -72,11 +92,18 @@ export function RoomTable({ rooms }: RoomTableProps) {
 
   const columns: ColumnDef<Room>[] = [
     {
+      accessorKey: 'roomNumber',
+      enableSorting: true,
+      enableColumnFilter: false,
+      enableHiding: true,
+    },
+    {
       accessorKey: 'roomName',
       header: 'Phòng',
       filterFn: fuzzyFilter,
       enableColumnFilter: true,
       enableSorting: true,
+      sortingFn: getRoomSortingFn(),
     },
     {
       accessorKey: 'roomPrice',
