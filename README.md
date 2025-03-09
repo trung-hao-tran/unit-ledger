@@ -1,57 +1,133 @@
-# Utility Cost Management Web App
+# Unit Ledger - Utility Cost Management System
 
-A modern web application for managing utility costs and room data with a clean, professional interface.
+A comprehensive web application for managing utility costs, room data, and billing for property managers. Built with modern web technologies for a seamless user experience.
+
+![Unit Ledger Screenshot](https://via.placeholder.com/800x450?text=Unit+Ledger+Screenshot)
 
 ## Features
 
-- **Room Management**
-  - Display rooms in a data table with details (room name, electric/water readings, price)
-  - Search functionality for rooms by name, block number, or room number
-  - Add new rooms with block number, room number, and price
-  - Import/Export room data
-  - Print functionality with custom template
+### Room Management
+- **Interactive Data Table**: View, sort, and filter rooms with powerful data table functionality
+- **Room Operations**: Add, edit, and delete rooms with an intuitive interface
+- **Block Organization**: Group rooms by blocks/buildings for better organization
 
-- **UI/UX Design**
-  - Mobile-compatible responsive design
-  - Clean, professional look using shadcn/ui components
-  - Tailwind CSS styling
-  - Lucide icons for UI elements
+### Utility Management
+- **Utility Readings**: Track electricity and water meter readings over time
+- **Calculation Mode**: Easily update utility readings for multiple rooms in batch
+- **Historical Data**: Maintain previous readings for comparison and billing
+
+### Billing & Printing
+- **Custom Invoices**: Generate professional invoices for tenants
+- **Bulk Printing**: Print multiple invoices, total sheets, or receiving sheets at once
+- **Customizable Templates**: Adjust printing options to suit your needs
+
+### Data Management
+- **Import/Export**: Easily import and export data as JSON files
+- **Cloud Storage**: Save and load data from Supabase cloud storage
+- **Session Storage**: Temporarily store calculated rooms for quick access
 
 ## Tech Stack
 
-- Vite + React + TypeScript
-- shadcn/ui for components
-- Tailwind CSS for styling
-- Lucide icons for UI elements
+- **Frontend**: React 18+ with TypeScript
+- **Build Tool**: Vite for fast development and optimized production builds
+- **UI Components**: shadcn/ui for beautiful, accessible components
+- **Styling**: Tailwind CSS for responsive design
+- **State Management**: Zustand for simple, efficient state management
+- **Cloud Storage**: Supabase for serverless cloud storage
+- **Table Management**: TanStack Table v8 for powerful data tables with sorting and filtering
+- **Icons**: Lucide and Radix icons for consistent UI elements
 
 ## Getting Started
 
-1. Install dependencies:
+### Prerequisites
+- Node.js 16+ and npm
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/unit-ledger.git
+cd unit-ledger
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Start the development server:
+3. Create a `.env` file with your Supabase credentials:
+```
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-3. Build for production:
+5. Build for production:
 ```bash
 npm run build
 ```
+
+## Usage Guide
+
+### Room Management
+- Use the main table to view all rooms
+- Click column headers to sort by any field
+- Use the search box to filter rooms by name
+- Use the block dropdown to filter by building/block
+
+### Calculation Mode
+1. Click "Thêm điện nước tháng mới" to enter calculation mode
+2. Select rooms to update in the preparation stage
+3. Enter new utility readings in the calculation stage
+4. Save to update the database
+
+### Cloud Storage
+1. Enter a cloud name in the input field
+2. Click "Lưu" to save current data to the cloud
+3. Click "Tải" to load data from the cloud
+
+### Printing
+1. Click "In" to enter printing mode
+2. Select rooms to include in the printout
+3. Choose utility cost set to apply
+4. Select printing options (invoice, total sheet, receiving sheet)
+5. Click "In" to generate and download PDFs
 
 ## Project Structure
 
 ```
 src/
   ├── components/      # React components
-  │   ├── ui/         # shadcn/ui components
-  │   └── room-table  # Room management components
-  ├── lib/            # Utility functions
-  ├── types/          # TypeScript interfaces
-  └── App.tsx         # Main application component
+  │   ├── ui/          # shadcn/ui components
+  │   └── ...          # Application-specific components
+  ├── lib/             # Utility functions and services
+  │   ├── cloud-storage.ts  # Supabase integration
+  │   └── pdf-generator.ts  # PDF generation utilities
+  ├── store/           # Zustand state management
+  │   ├── rooms.ts     # Room data store
+  │   ├── cloud-store.ts    # Cloud storage state
+  │   └── ...          # Other state stores
+  ├── types/           # TypeScript type definitions
+  └── App.tsx          # Main application component
 ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful component library
+- [TanStack Table](https://tanstack.com/table/v8) for the powerful table functionality
+- [Supabase](https://supabase.com/) for the backend storage solution
 
 ## Data Types
 

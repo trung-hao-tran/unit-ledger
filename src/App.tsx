@@ -91,7 +91,7 @@ function App() {
   const handleSaveCalculations = (updatedRooms: Room[]) => {
     updateRooms(updatedRooms);
     // Store the calculated rooms in session storage
-    useSessionStore.getState().setRecentlyCalculatedRooms(updatedRooms);
+    useSessionStore.getState().addCalculatedRooms(updatedRooms);
     setCalculationMode('none');
     clearCalculation();
   };

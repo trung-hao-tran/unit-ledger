@@ -213,14 +213,14 @@ export function PrintingStage({
           <div className="border p-4 rounded-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-medium">Chọn Phòng</h3>
-              {useSessionStore.getState().hasRecentlyCalculatedRooms() && (
+              {useSessionStore.getState().hasCalculatedRooms() && (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    const recentRooms = useSessionStore.getState().recentlyCalculatedRooms;
-                    const recentRoomNames = new Set(recentRooms.map(room => room.roomName));
-                    setSelectedRooms(recentRoomNames);
+                    const calculatedRooms = useSessionStore.getState().getCalculatedRooms();
+                    const calculatedRoomNames = new Set(calculatedRooms.map(room => room.roomName));
+                    setSelectedRooms(calculatedRoomNames);
                   }}
                 >
                   Chọn phòng vừa tính

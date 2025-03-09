@@ -2,10 +2,11 @@ import { create } from 'zustand';
 import type { Room } from '@/types';
 
 interface SessionState {
-  recentlyCalculatedRooms: Room[];
-  setRecentlyCalculatedRooms: (rooms: Room[]) => void;
-  clearRecentlyCalculatedRooms: () => void;
-  hasRecentlyCalculatedRooms: () => boolean;
+  calculatedRooms: Room[];
+  addCalculatedRooms: (rooms: Room[]) => void;
+  clearCalculatedRooms: () => void;
+  hasCalculatedRooms: () => boolean;
+  getCalculatedRooms: () => Room[];
 }
 
 // Helper to interact with sessionStorage
@@ -13,7 +14,7 @@ const sessionStorageKey = 'unit-ledger-calculated-rooms';
 
 // Create the session store
 export const useSessionStore = create<SessionState>((set, get) => ({
-  recentlyCalculatedRooms: (() => {
+  calculatedRooms: (() => {
     try {
       const storedData = sessionStorage.getItem(sessionStorageKey);
       return storedData ? JSON.parse(storedData) : [];
@@ -23,17 +24,32 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   })(),
   
-  setRecentlyCalculatedRooms: (rooms) => {
-    set({ recentlyCalculatedRooms: rooms });
+  addCalculatedRooms: (newRooms) => {
+    const currentRooms = get().calculatedRooms;
+    
+    // Create a map of existing rooms by roomName for quick lookup
+    const existingRoomsMap = new Map(
+      currentRooms.map(room => [room.roomName, room])
+    );
+    
+    // Add new rooms, replacing existing ones with the same roomName
+    newRooms.forEach(room => {
+      existingRoomsMap.set(room.roomName, room);
+    });
+    
+    // Convert map back to array
+    const updatedRooms = Array.from(existingRoomsMap.values());
+    
+    set({ calculatedRooms: updatedRooms });
     try {
-      sessionStorage.setItem(sessionStorageKey, JSON.stringify(rooms));
+      sessionStorage.setItem(sessionStorageKey, JSON.stringify(updatedRooms));
     } catch (error) {
       console.error('Failed to save session data:', error);
     }
   },
   
-  clearRecentlyCalculatedRooms: () => {
-    set({ recentlyCalculatedRooms: [] });
+  clearCalculatedRooms: () => {
+    set({ calculatedRooms: [] });
     try {
       sessionStorage.removeItem(sessionStorageKey);
     } catch (error) {
@@ -41,7 +57,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
   
-  hasRecentlyCalculatedRooms: () => {
-    return get().recentlyCalculatedRooms.length > 0;
+  hasCalculatedRooms: () => {
+    return get().calculatedRooms.length > 0;
+  },
+  
+  getCalculatedRooms: () => {
+    return get().calculatedRooms;
   },
 })); 
