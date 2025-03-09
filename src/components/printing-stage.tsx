@@ -256,17 +256,6 @@ export function PrintingStage({
     <div className="space-y-4">
       <div className="flex justify-between items-center p-4">
         <h2 className="text-lg font-semibold">Tùy Chọn In</h2>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            Hủy
-          </Button>
-          <Button 
-            onClick={handlePrint}
-            disabled={!selectedCostSet || selectedRooms.size === 0 || !isAnyTypeSelected}
-          >
-            In
-          </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 p-4 gap-4">
@@ -564,6 +553,21 @@ export function PrintingStage({
                 </div>
               </div>
             </div>
+            
+            </div>
+            <div className="mt-8 flex justify-end space-x-2">
+            <Button 
+                variant="outline" 
+                onClick={onCancel}
+              >
+                Thoát
+              </Button>
+              <Button 
+                onClick={handlePrint}
+                disabled={!selectedCostSet || selectedRooms.size === 0 || !isAnyTypeSelected}
+              >
+                Xuất ra file in
+              </Button>
           </div>
         </div>
       </div>
