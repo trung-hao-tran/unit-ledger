@@ -2,7 +2,7 @@
 
 A comprehensive web application for managing utility costs, room data, and billing for property managers. Built with modern web technologies for a seamless user experience.
 
-![Try Unit ledger here](https://trung-hao-tran.github.io/unit-ledger/)
+[Try Unit ledger here](https://trung-hao-tran.github.io/unit-ledger/)
 
 ## Features
 
