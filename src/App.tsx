@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useRoomsStore } from '@/store/rooms';
 import { useCalculationRoomsStore } from '@/store/calculation-rooms';
 import { useSessionStore } from '@/store/session';
+import { useCloudStore } from '@/store/cloud-store';
 import type { Room, UtilityCostSet, PrintingOptions } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -88,10 +89,20 @@ function App() {
     setCalculationMode('calculation');
   };
 
-  const handleSaveCalculations = (updatedRooms: Room[]) => {
+  const handleSaveCalculations = async (updatedRooms: Room[]) => {
+    // Update rooms in the store
     updateRooms(updatedRooms);
+    
     // Store the calculated rooms in session storage
     useSessionStore.getState().addCalculatedRooms(updatedRooms);
+    
+    // Save to cloud
+    const cloudStore = useCloudStore.getState();
+    if (cloudStore.cloudName) {
+      await cloudStore.saveCurrentData();
+    }
+    
+    // Reset UI state
     setCalculationMode('none');
     clearCalculation();
   };
