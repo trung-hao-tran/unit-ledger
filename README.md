@@ -46,7 +46,7 @@ A comprehensive web application for managing utility costs, room data, and billi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/unit-ledger.git
+git clone https://github.com/trung-hao-tran/unit-ledger.git
 cd unit-ledger
 ```
 

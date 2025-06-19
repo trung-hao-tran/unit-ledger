@@ -402,7 +402,6 @@ currentY += lineHeight;
   currentY += lineHeight + 1;
   doc.text('Nếu không báo, nhà trọ không hoàn cọc.', footerX, currentY, { align: 'center' });
   currentY += lineHeight + 1;
-  doc.text('TK: ACB 999 85 86 NGUYỄN MINH HOÀNG', footerX, currentY, { align: 'center' });
 }
 
 export async function generateReceivingSheetPDF(data: PrintingData): Promise<Uint8Array> {
