@@ -1,22 +1,41 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Room, UtilityCostSet, PrintingOptions, PrintingData } from '@/types';
-import { generateInvoicePDF, generateTotalSheetPDF, generateReceivingSheetPDF } from '@/lib/pdf-generator';
-import { useUtilityCostsStore } from '@/store/utility-costs';
-import { useSessionStore } from '@/store/session';
-import { EditUtilityCostDialog } from '@/components/edit-utility-cost-dialog';
-import { AddUtilityCostDialog } from '@/components/add-utility-cost-dialog';
-import { Pencil, Plus, Calendar as CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import type {
+  Room,
+  UtilityCostSet,
+  PrintingOptions,
+  PrintingData,
+} from "@/types";
+import {
+  generateInvoicePDF,
+  generateTotalSheetPDF,
+  generateReceivingSheetPDF,
+} from "@/lib/pdf-generator";
+import { useUtilityCostsStore } from "@/store/utility-costs";
+import { useSessionStore } from "@/store/session";
+import { EditUtilityCostDialog } from "@/components/edit-utility-cost-dialog";
+import { AddUtilityCostDialog } from "@/components/add-utility-cost-dialog";
+import { Pencil, Plus, Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { vi } from 'date-fns/locale';
+import { vi } from "date-fns/locale";
 
 interface PrintingStageProps {
   rooms: Room[];
@@ -28,7 +47,7 @@ interface PrintingStageProps {
   onCancel: () => void;
 }
 
-type GroupByOption = 'block' | 'date';
+type GroupByOption = "block" | "date";
 
 interface RoomGroup {
   key: string;
@@ -44,25 +63,31 @@ export function PrintingStage({
 }: PrintingStageProps) {
   const { costSets, updateCostSet, addCostSet } = useUtilityCostsStore();
   const [selectedRooms, setSelectedRooms] = useState<Set<string>>(new Set());
-  const [selectedCostSet, setSelectedCostSet] = useState<UtilityCostSet | null>(null);
-  const [editingCostSet, setEditingCostSet] = useState<UtilityCostSet | null>(null);
+  const [selectedCostSet, setSelectedCostSet] = useState<UtilityCostSet | null>(
+    null,
+  );
+  const [editingCostSet, setEditingCostSet] = useState<UtilityCostSet | null>(
+    null,
+  );
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newCostSetDialogOpen, setNewCostSetDialogOpen] = useState(false);
-  const [groupBy, setGroupBy] = useState<GroupByOption>('date');
-  const [printingOptions, setPrintingOptions] = useState<PrintingOptions>(() => {
-    const now = new Date();
-    const defaultDate = new Date(now.getFullYear(), now.getMonth(), 10);
-    return {
-      types: {
-        invoice: true,
-        total: false,
-        receivingSheet: true
-      },
-      bottomUp: false,
-      includeDate: true,
-      selectedDate: defaultDate
-    };
-  });
+  const [groupBy, setGroupBy] = useState<GroupByOption>("date");
+  const [printingOptions, setPrintingOptions] = useState<PrintingOptions>(
+    () => {
+      const now = new Date();
+      const defaultDate = new Date(now.getFullYear(), now.getMonth(), 10);
+      return {
+        types: {
+          invoice: true,
+          total: false,
+          receivingSheet: true,
+        },
+        bottomUp: false,
+        includeDate: true,
+        selectedDate: defaultDate,
+      };
+    },
+  );
 
   // Select the first cost set by default
   useEffect(() => {
@@ -73,19 +98,19 @@ export function PrintingStage({
 
   const roomGroups = useMemo(() => {
     const groups: RoomGroup[] = [];
-    
-    if (groupBy === 'block') {
+
+    if (groupBy === "block") {
       // Group by block number
       const blockMap = new Map<string, Room[]>();
-      
-      rooms.forEach(room => {
+
+      rooms.forEach((room) => {
         const block = room.blockNumber;
         if (!blockMap.has(block)) {
           blockMap.set(block, []);
         }
         blockMap.get(block)!.push(room);
       });
-      
+
       // Convert map to array and sort by block number
       Array.from(blockMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
@@ -94,30 +119,32 @@ export function PrintingStage({
             key: `block-${blockNumber}`,
             title: `Dãy ${blockNumber}`,
             rooms: blockRooms.sort((a, b) => a.roomNumber - b.roomNumber),
-            isAllSelected: blockRooms.every(room => selectedRooms.has(room.roomName))
+            isAllSelected: blockRooms.every((room) =>
+              selectedRooms.has(room.roomName),
+            ),
           });
         });
     } else {
       // Group by update date
       const dateMap = new Map<string, Room[]>();
-      
-      rooms.forEach(room => {
+
+      rooms.forEach((room) => {
         const date = new Date(room.updatedAt);
-        const dateKey = format(date, 'dd/MM/yyyy', { locale: vi });
-        
+        const dateKey = format(date, "dd/MM/yyyy", { locale: vi });
+
         if (!dateMap.has(dateKey)) {
           dateMap.set(dateKey, []);
         }
         dateMap.get(dateKey)!.push(room);
       });
-      
+
       // Convert map to array and sort by date (newest first)
       Array.from(dateMap.entries())
         .sort(([dateA], [dateB]) => {
           // Parse dates in format dd/MM/yyyy
-          const [dayA, monthA, yearA] = dateA.split('/').map(Number);
-          const [dayB, monthB, yearB] = dateB.split('/').map(Number);
-          
+          const [dayA, monthA, yearA] = dateA.split("/").map(Number);
+          const [dayB, monthB, yearB] = dateB.split("/").map(Number);
+
           // Compare years, then months, then days
           if (yearA !== yearB) return yearB - yearA;
           if (monthA !== monthB) return monthB - monthA;
@@ -127,14 +154,18 @@ export function PrintingStage({
           groups.push({
             key: `date-${dateKey}`,
             title: `Ngày ${dateKey}`,
-            rooms: dateRooms.sort((a, b) => 
-              a.blockNumber.localeCompare(b.blockNumber) || a.roomNumber - b.roomNumber
+            rooms: dateRooms.sort(
+              (a, b) =>
+                a.blockNumber.localeCompare(b.blockNumber) ||
+                a.roomNumber - b.roomNumber,
             ),
-            isAllSelected: dateRooms.every(room => selectedRooms.has(room.roomName))
+            isAllSelected: dateRooms.every((room) =>
+              selectedRooms.has(room.roomName),
+            ),
           });
         });
     }
-    
+
     return groups;
   }, [rooms, selectedRooms, groupBy]);
 
@@ -150,31 +181,40 @@ export function PrintingStage({
 
   const handleGroupSelect = (groupKey: string, checked: boolean) => {
     const newSelected = new Set(selectedRooms);
-    const group = roomGroups.find(g => g.key === groupKey);
-    
+    const group = roomGroups.find((g) => g.key === groupKey);
+
     if (!group) return;
-    
-    group.rooms.forEach(room => {
+
+    group.rooms.forEach((room) => {
       if (checked) {
         newSelected.add(room.roomName);
       } else {
         newSelected.delete(room.roomName);
       }
     });
-    
+
     setSelectedRooms(newSelected);
   };
 
-  const selectedRoomsList = rooms.filter(room => selectedRooms.has(room.roomName))
-    .sort((a, b) => a.blockNumber.localeCompare(b.blockNumber) || a.roomNumber - b.roomNumber);
+  const selectedRoomsList = rooms
+    .filter((room) => selectedRooms.has(room.roomName))
+    .sort(
+      (a, b) =>
+        a.blockNumber.localeCompare(b.blockNumber) ||
+        a.roomNumber - b.roomNumber,
+    );
 
   const handlePrint = async () => {
-    if (!selectedCostSet || selectedRooms.size === 0 || !printingOptions.selectedDate) {
+    if (
+      !selectedCostSet ||
+      selectedRooms.size === 0 ||
+      !printingOptions.selectedDate
+    ) {
       return;
     }
 
     const printData: PrintingData = {
-      rooms: selectedRoomsList.map(room => ({
+      rooms: selectedRoomsList.map((room) => ({
         roomName: room.roomName,
         blockNumber: room.blockNumber,
         roomNumber: room.roomNumber,
@@ -182,7 +222,7 @@ export function PrintingStage({
         currentElectric: room.currentElectric,
         currentWater: room.currentWater,
         previousElectric: room.previousElectric,
-        previousWater: room.previousWater
+        previousWater: room.previousWater,
       })),
       utility: {
         electricityCost: selectedCostSet.electricityCost,
@@ -192,23 +232,27 @@ export function PrintingStage({
         printTypes: {
           invoice: printingOptions.types.invoice,
           total: printingOptions.types.total,
-          receivingSheet: printingOptions.types.receivingSheet
+          receivingSheet: printingOptions.types.receivingSheet,
         },
         totalSheetOptions: {
           bottomUp: printingOptions.bottomUp,
-          includeDate: printingOptions.includeDate
-        }
-      }
+          includeDate: printingOptions.includeDate,
+        },
+      },
     };
 
-    const dateStr = format(printingOptions.selectedDate, 'yyyy-MM-dd', { locale: vi });
+    const dateStr = format(printingOptions.selectedDate, "yyyy-MM-dd", {
+      locale: vi,
+    });
 
     // Generate PDFs based on selected types
     if (printingOptions.types.invoice) {
       const invoicePdf = await generateInvoicePDF(printData);
-      const invoiceBlob = new Blob([invoicePdf], { type: 'application/pdf' });
+      const invoiceBlob = new Blob([invoicePdf as BlobPart], {
+        type: "application/pdf",
+      });
       const invoiceUrl = URL.createObjectURL(invoiceBlob);
-      const invoiceLink = document.createElement('a');
+      const invoiceLink = document.createElement("a");
       invoiceLink.href = invoiceUrl;
       invoiceLink.download = `invoices-${dateStr}.pdf`;
       document.body.appendChild(invoiceLink);
@@ -216,12 +260,14 @@ export function PrintingStage({
       document.body.removeChild(invoiceLink);
       URL.revokeObjectURL(invoiceUrl);
     }
-    
+
     if (printingOptions.types.total) {
       const totalPdf = await generateTotalSheetPDF(printData);
-      const totalBlob = new Blob([totalPdf], { type: 'application/pdf' });
+      const totalBlob = new Blob([totalPdf as BlobPart], {
+        type: "application/pdf",
+      });
       const totalUrl = URL.createObjectURL(totalBlob);
-      const totalLink = document.createElement('a');
+      const totalLink = document.createElement("a");
       totalLink.href = totalUrl;
       totalLink.download = `total-sheet-${dateStr}.pdf`;
       document.body.appendChild(totalLink);
@@ -232,9 +278,11 @@ export function PrintingStage({
 
     if (printingOptions.types.receivingSheet) {
       generateReceivingSheetPDF(printData).then((pdfData) => {
-        const blob = new Blob([pdfData], { type: 'application/pdf' });
+        const blob = new Blob([pdfData as BlobPart], {
+          type: "application/pdf",
+        });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `receiving_sheet_${new Date().toISOString()}.pdf`;
         a.click();
@@ -246,11 +294,14 @@ export function PrintingStage({
     onPrint({
       selectedRooms: selectedRoomsList,
       selectedCostSet,
-      printingOptions
+      printingOptions,
     });
   };
 
-  const isAnyTypeSelected = printingOptions.types.invoice || printingOptions.types.total || printingOptions.types.receivingSheet;
+  const isAnyTypeSelected =
+    printingOptions.types.invoice ||
+    printingOptions.types.total ||
+    printingOptions.types.receivingSheet;
 
   return (
     <div className="space-y-4">
@@ -279,12 +330,16 @@ export function PrintingStage({
                 </Select>
               </div>
               {useSessionStore.getState().hasCalculatedRooms() && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
-                    const calculatedRooms = useSessionStore.getState().getCalculatedRooms();
-                    const calculatedRoomNames = new Set(calculatedRooms.map(room => room.roomName));
+                    const calculatedRooms = useSessionStore
+                      .getState()
+                      .getCalculatedRooms();
+                    const calculatedRoomNames = new Set(
+                      calculatedRooms.map((room) => room.roomName),
+                    );
                     setSelectedRooms(calculatedRoomNames);
                   }}
                 >
@@ -298,7 +353,7 @@ export function PrintingStage({
               </p>
               {selectedRoomsList.length > 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  {selectedRoomsList.map(room => room.roomName).join(', ')}
+                  {selectedRoomsList.map((room) => room.roomName).join(", ")}
                 </p>
               )}
             </div>
@@ -309,31 +364,28 @@ export function PrintingStage({
                     <Checkbox
                       id={group.key}
                       checked={group.isAllSelected}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleGroupSelect(group.key, checked === true)
                       }
                     />
-                    <Label
-                      htmlFor={group.key}
-                      className="text-sm font-medium"
-                    >
+                    <Label htmlFor={group.key} className="text-sm font-medium">
                       {group.title}
                     </Label>
                   </div>
                   <div className="ml-6 grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {group.rooms.map((room) => (
-                      <div key={room.roomName} className="flex items-center space-x-2">
+                      <div
+                        key={room.roomName}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={room.roomName}
                           checked={selectedRooms.has(room.roomName)}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             handleRoomSelect(room.roomName, checked === true)
                           }
                         />
-                        <Label
-                          htmlFor={room.roomName}
-                          className="text-sm"
-                        >
+                        <Label htmlFor={room.roomName} className="text-sm">
                           {room.roomName}
                         </Label>
                       </div>
@@ -356,7 +408,9 @@ export function PrintingStage({
                   if (value === "new") {
                     setNewCostSetDialogOpen(true);
                   } else {
-                    const costSet = costSets.find(set => set.id === parseInt(value));
+                    const costSet = costSets.find(
+                      (set) => set.id === parseInt(value),
+                    );
                     if (costSet) {
                       setSelectedCostSet(costSet);
                     }
@@ -431,12 +485,15 @@ export function PrintingStage({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !printingOptions.selectedDate && "text-muted-foreground"
+                        !printingOptions.selectedDate &&
+                          "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {printingOptions.selectedDate ? (
-                        format(printingOptions.selectedDate, "PPP", { locale: vi })
+                        format(printingOptions.selectedDate, "PPP", {
+                          locale: vi,
+                        })
                       ) : (
                         <span>Chọn ngày</span>
                       )}
@@ -444,13 +501,13 @@ export function PrintingStage({
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
-                    locale={vi}
+                      locale={vi}
                       mode="single"
                       selected={printingOptions.selectedDate}
                       onSelect={(date) => {
-                        setPrintingOptions(prev => ({
+                        setPrintingOptions((prev) => ({
                           ...prev,
-                          selectedDate: date
+                          selectedDate: date,
                         }));
                       }}
                       initialFocus
@@ -468,12 +525,12 @@ export function PrintingStage({
                       <Checkbox
                         checked={printingOptions.types.invoice}
                         onCheckedChange={(checked) => {
-                          setPrintingOptions(prev => ({
+                          setPrintingOptions((prev) => ({
                             ...prev,
                             types: {
                               ...prev.types,
-                              invoice: checked as boolean
-                            }
+                              invoice: checked as boolean,
+                            },
                           }));
                         }}
                       />
@@ -486,12 +543,12 @@ export function PrintingStage({
                       <Checkbox
                         checked={printingOptions.types.total}
                         onCheckedChange={(checked) => {
-                          setPrintingOptions(prev => ({
+                          setPrintingOptions((prev) => ({
                             ...prev,
                             types: {
                               ...prev.types,
-                              total: checked as boolean
-                            }
+                              total: checked as boolean,
+                            },
                           }));
                         }}
                       />
@@ -504,13 +561,19 @@ export function PrintingStage({
                           checked={printingOptions.bottomUp}
                           disabled={!printingOptions.types.total}
                           onCheckedChange={(checked) => {
-                            setPrintingOptions(prev => ({
+                            setPrintingOptions((prev) => ({
                               ...prev,
-                              bottomUp: checked as boolean
+                              bottomUp: checked as boolean,
                             }));
                           }}
                         />
-                        <Label className={!printingOptions.types.total ? "text-muted-foreground" : ""}>
+                        <Label
+                          className={
+                            !printingOptions.types.total
+                              ? "text-muted-foreground"
+                              : ""
+                          }
+                        >
                           In từ dưới lên
                         </Label>
                       </div>
@@ -520,13 +583,19 @@ export function PrintingStage({
                           checked={printingOptions.includeDate}
                           disabled={!printingOptions.types.total}
                           onCheckedChange={(checked) => {
-                            setPrintingOptions(prev => ({
+                            setPrintingOptions((prev) => ({
                               ...prev,
-                              includeDate: checked as boolean
+                              includeDate: checked as boolean,
                             }));
                           }}
                         />
-                        <Label className={!printingOptions.types.total ? "text-muted-foreground" : ""}>
+                        <Label
+                          className={
+                            !printingOptions.types.total
+                              ? "text-muted-foreground"
+                              : ""
+                          }
+                        >
                           Bao gồm dãy/ngày
                         </Label>
                       </div>
@@ -538,12 +607,12 @@ export function PrintingStage({
                       <Checkbox
                         checked={printingOptions.types.receivingSheet}
                         onCheckedChange={(checked) => {
-                          setPrintingOptions(prev => ({
+                          setPrintingOptions((prev) => ({
                             ...prev,
                             types: {
                               ...prev.types,
-                              receivingSheet: checked as boolean
-                            }
+                              receivingSheet: checked as boolean,
+                            },
                           }));
                         }}
                       />
@@ -553,22 +622,21 @@ export function PrintingStage({
                 </div>
               </div>
             </div>
-            
-            </div>
-            <div className="mt-8 flex justify-end space-x-2">
-            <Button 
-                variant="outline" 
-                
-                onClick={onCancel}
-              >
-                Thoát
-              </Button>
-              <Button 
-                onClick={handlePrint}
-                disabled={!selectedCostSet || selectedRooms.size === 0 || !isAnyTypeSelected}
-              >
-                Xuất ra file in
-              </Button>
+          </div>
+          <div className="mt-8 flex justify-end space-x-2">
+            <Button variant="outline" onClick={onCancel}>
+              Thoát
+            </Button>
+            <Button
+              onClick={handlePrint}
+              disabled={
+                !selectedCostSet ||
+                selectedRooms.size === 0 ||
+                !isAnyTypeSelected
+              }
+            >
+              Xuất ra file in
+            </Button>
           </div>
         </div>
       </div>

@@ -204,7 +204,7 @@ export function CalculationStage({
             <TabsContent 
               key={blockNumber} 
               value={blockNumber}
-              className="rounded-md border shadow-sm"
+              className="rounded-md border shadow-xs"
             >
               <div className="p-4 space-y-4">
                 <div className="rounded-md">
