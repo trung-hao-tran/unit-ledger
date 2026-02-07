@@ -205,7 +205,7 @@ export function CalculationStage({ onSave, onCancel }: CalculationStageProps) {
       className="w-full flex justify-center"
       onKeyDown={handlePageKeyDown}
     >
-      <div className="max-w-4xl w-full space-y-4 p-4">
+      <div className="max-w-7xl w-full space-y-4 p-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Cập nhật chỉ số điện nước</h2>
           <div className="space-x-2">
