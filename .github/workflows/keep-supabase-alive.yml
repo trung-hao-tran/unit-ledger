@@ -41,11 +41,12 @@ jobs:
       - name: List Storage files
         run: |
           response=$(curl -s -w "\n%{http_code}" \
+            -X POST \
             "${{ secrets.VITE_SUPABASE_URL }}/storage/v1/object/list/exports" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"prefix":"","limit":1,"offset":0,"sortBy":{"column":"name","order":"asc"}}')
+            --data-raw '{"prefix":"","limit":1,"offset":0,"sortBy":{"column":"name","order":"asc"}}')
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | head -n -1)
           echo "Storage response: $http_code"
