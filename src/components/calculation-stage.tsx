@@ -1,25 +1,25 @@
-import { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useRoomsStore } from '@/store/rooms';
-import { useCalculationRoomsStore } from '@/store/calculation-rooms';
-import { RoomSelectionDialog } from '@/components/room-selection-dialog';
-import { Pencil2Icon, Cross2Icon } from '@radix-ui/react-icons';
-import type { Room, CalculationRoom, CalculationFields } from '@/types';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useRoomsStore } from "@/store/rooms";
+import { useCalculationRoomsStore } from "@/store/calculation-rooms";
+import { RoomSelectionDialog } from "@/components/room-selection-dialog";
+import { Pencil2Icon, Cross2Icon } from "@radix-ui/react-icons";
+import type { Room, CalculationRoom, CalculationFields } from "@/types";
 
 interface CalculationStageProps {
   onSave: (updatedRooms: Room[]) => void;
   onCancel: () => void;
 }
 
-type EditableFields = keyof Pick<CalculationFields, 'newElectric' | 'newWater'>;
-type RoomFields = keyof Pick<Room, 'roomPrice' | 'currentElectric' | 'currentWater'>;
+type EditableFields = keyof Pick<CalculationFields, "newElectric" | "newWater">;
+type RoomFields = keyof Pick<
+  Room,
+  "roomPrice" | "currentElectric" | "currentWater"
+>;
 
-export function CalculationStage({
-  onSave,
-  onCancel,
-}: CalculationStageProps) {
+export function CalculationStage({ onSave, onCancel }: CalculationStageProps) {
   const { getRemainingRooms } = useRoomsStore();
   const {
     calculationRooms,
@@ -29,11 +29,31 @@ export function CalculationStage({
   } = useCalculationRoomsStore();
 
   const [activeBlock, setActiveBlock] = useState<string>(
-    String(calculationRooms[0]?.blockNumber ?? '')
+    String(calculationRooms[0]?.blockNumber ?? ""),
   );
   const [editingRooms, setEditingRooms] = useState<Set<string>>(new Set());
   const [isSelectionOpen, setIsSelectionOpen] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, Set<string>>>({}); // roomName -> Set of field names with errors
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, Set<string>>
+  >({}); // roomName -> Set of field names with errors
+  const isNumpadDotHeld = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const focusFirstInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      const input = containerRef.current?.querySelector<HTMLInputElement>(
+        "table input:not(:disabled)",
+      );
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    focusFirstInput();
+  }, [activeBlock, focusFirstInput]);
 
   const blockGroups = useMemo(() => {
     const groups = calculationRooms.reduce((acc, room) => {
@@ -51,41 +71,45 @@ export function CalculationStage({
       }));
   }, [calculationRooms]);
 
-  const validateInput = (room: CalculationRoom, field: string, value: number) => {
+  const validateInput = (
+    room: CalculationRoom,
+    field: string,
+    value: number,
+  ) => {
     const roomErrors = new Set(validationErrors[room.roomName] || []);
-    
+
     // Remove existing error for this field
     roomErrors.delete(field);
-    
+
     // Check for negative numbers
     if (value < 0) {
       return value; // Don't allow negative numbers
     }
 
     // Validate electric readings
-    if (field === 'newElectric' && value < room.currentElectric) {
-      roomErrors.add('newElectric');
+    if (field === "newElectric" && value < room.currentElectric) {
+      roomErrors.add("newElectric");
     }
-    if (field === 'currentElectric' && room.newElectric < value) {
-      roomErrors.add('newElectric');
+    if (field === "currentElectric" && room.newElectric < value) {
+      roomErrors.add("newElectric");
     }
 
     // Validate water readings
-    if (field === 'newWater' && value < room.currentWater) {
-      roomErrors.add('newWater');
+    if (field === "newWater" && value < room.currentWater) {
+      roomErrors.add("newWater");
     }
-    if (field === 'currentWater' && room.newWater < value) {
-      roomErrors.add('newWater');
+    if (field === "currentWater" && room.newWater < value) {
+      roomErrors.add("newWater");
     }
 
     // Update validation errors
     if (roomErrors.size > 0) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        [room.roomName]: roomErrors
+        [room.roomName]: roomErrors,
       }));
     } else {
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[room.roomName];
         return newErrors;
@@ -98,31 +122,31 @@ export function CalculationStage({
   const handleInputChange = (
     roomName: string,
     field: EditableFields | RoomFields,
-    inputValue: number
+    inputValue: number,
   ) => {
-    const room = calculationRooms.find(r => r.roomName === roomName);
+    const room = calculationRooms.find((r) => r.roomName === roomName);
     if (!room) return;
 
     // Don't allow negative numbers
     const value = Math.max(0, inputValue);
 
     const updates: Partial<CalculationFields> & Partial<Room> = {};
-    
+
     // Handle each field independently
     switch (field) {
-      case 'currentElectric':
+      case "currentElectric":
         updates.currentElectric = validateInput(room, field, value);
         break;
-      case 'currentWater':
+      case "currentWater":
         updates.currentWater = validateInput(room, field, value);
         break;
-      case 'newElectric':
+      case "newElectric":
         updates.newElectric = validateInput(room, field, value);
         break;
-      case 'newWater':
+      case "newWater":
         updates.newWater = validateInput(room, field, value);
         break;
-      case 'roomPrice':
+      case "roomPrice":
         updates.roomPrice = value;
         validateInput(room, field, value);
         break;
@@ -132,11 +156,11 @@ export function CalculationStage({
   };
 
   const handleAddRooms = (selectedRooms: Room[]) => {
-    selectedRooms.forEach(room => addCalculationRoom(room));
+    selectedRooms.forEach((room) => addCalculationRoom(room));
   };
 
   const handleSave = () => {
-    const updatedRooms: Room[] = calculationRooms.map(room => ({
+    const updatedRooms: Room[] = calculationRooms.map((room) => ({
       roomName: room.roomName,
       blockNumber: room.blockNumber,
       roomNumber: room.roomNumber,
@@ -160,29 +184,43 @@ export function CalculationStage({
     setEditingRooms(newEditing);
   };
 
+  const handlePageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "+" || e.key === "-") {
+      e.preventDefault();
+      const blocks = blockGroups.map((g) => g.blockNumber);
+      const currentIdx = blocks.indexOf(activeBlock);
+      if (e.key === "+") {
+        setActiveBlock(blocks[(currentIdx + 1) % blocks.length]);
+      } else if (e.key === "-") {
+        setActiveBlock(
+          blocks[(currentIdx - 1 + blocks.length) % blocks.length],
+        );
+      }
+    }
+  };
+
   return (
-    <div className="w-full flex justify-center">
+    <div
+      ref={containerRef}
+      className="w-full flex justify-center"
+      onKeyDown={handlePageKeyDown}
+    >
       <div className="max-w-4xl w-full space-y-4 p-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Cập nhật chỉ số điện nước</h2>
           <div className="space-x-2">
-            <Button 
-              variant="outline"
-              onClick={() => setIsSelectionOpen(true)}
-            >
+            <Button variant="outline" onClick={() => setIsSelectionOpen(true)}>
               Thêm phòng
             </Button>
             <Button variant="outline" onClick={onCancel}>
               Hủy
             </Button>
-            <Button onClick={handleSave}>
-              Lưu
-            </Button>
+            <Button onClick={handleSave}>Lưu</Button>
           </div>
         </div>
 
-        <Tabs 
-          value={activeBlock} 
+        <Tabs
+          value={activeBlock}
           onValueChange={setActiveBlock}
           className="w-full space-y-6"
         >
@@ -201,14 +239,57 @@ export function CalculationStage({
           </div>
 
           {blockGroups.map(({ blockNumber, rooms }) => (
-            <TabsContent 
-              key={blockNumber} 
+            <TabsContent
+              key={blockNumber}
               value={blockNumber}
               className="rounded-md border shadow-xs"
             >
               <div className="p-4 space-y-4">
                 <div className="rounded-md">
-                  <table className="w-full">
+                  <table
+                    className="w-full"
+                    onKeyDown={(e) => {
+                      if (e.key === "." || e.key === "Decimal") {
+                        e.preventDefault();
+                        isNumpadDotHeld.current = true;
+                        return;
+                      }
+                      if (e.key === "Enter") {
+                        const table = e.currentTarget;
+                        const inputs = Array.from(
+                          table.querySelectorAll<HTMLInputElement>(
+                            "input:not(:disabled)",
+                          ),
+                        );
+                        const currentIndex = inputs.indexOf(
+                          e.target as HTMLInputElement,
+                        );
+                        if (isNumpadDotHeld.current) {
+                          if (currentIndex > 0) {
+                            e.preventDefault();
+                            const prev = inputs[currentIndex - 1];
+                            prev.focus();
+                            prev.select();
+                          }
+                        } else {
+                          if (
+                            currentIndex >= 0 &&
+                            currentIndex < inputs.length - 1
+                          ) {
+                            e.preventDefault();
+                            const next = inputs[currentIndex + 1];
+                            next.focus();
+                            next.select();
+                          }
+                        }
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "." || e.key === "Decimal") {
+                        isNumpadDotHeld.current = false;
+                      }
+                    }}
+                  >
                     <thead>
                       <tr className="border-b">
                         <th className="p-2 text-left">Phòng</th>
@@ -221,7 +302,7 @@ export function CalculationStage({
                       </tr>
                     </thead>
                     <tbody>
-                      {rooms.map(room => {
+                      {rooms.map((room) => {
                         const isEditing = editingRooms.has(room.roomName);
                         return (
                           <tr key={room.roomName} className="border-b">
@@ -230,10 +311,14 @@ export function CalculationStage({
                               <Input
                                 type="number"
                                 value={room.roomPrice}
-                                onChange={e =>
-                                  handleInputChange(room.roomName, 'roomPrice', Number(e.target.value))
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    room.roomName,
+                                    "roomPrice",
+                                    Number(e.target.value),
+                                  )
                                 }
-                                className={`w-24 ${validationErrors[room.roomName]?.has('roomPrice') ? 'border-red-500' : ''}`}
+                                className={`w-24 ${validationErrors[room.roomName]?.has("roomPrice") ? "border-red-500" : ""}`}
                                 disabled={!isEditing}
                                 min="0"
                               />
@@ -242,10 +327,14 @@ export function CalculationStage({
                               <Input
                                 type="number"
                                 value={room.currentElectric}
-                                onChange={e =>
-                                  handleInputChange(room.roomName, 'currentElectric', Number(e.target.value))
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    room.roomName,
+                                    "currentElectric",
+                                    Number(e.target.value),
+                                  )
                                 }
-                                className={`w-24 ${validationErrors[room.roomName]?.has('currentElectric') ? 'border-red-500' : ''}`}
+                                className={`w-24 ${validationErrors[room.roomName]?.has("currentElectric") ? "border-red-500" : ""}`}
                                 disabled={!isEditing}
                                 min="0"
                               />
@@ -254,10 +343,14 @@ export function CalculationStage({
                               <Input
                                 type="number"
                                 value={room.newElectric}
-                                onChange={e =>
-                                  handleInputChange(room.roomName, 'newElectric', Number(e.target.value))
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    room.roomName,
+                                    "newElectric",
+                                    Number(e.target.value),
+                                  )
                                 }
-                                className={`w-24 ${validationErrors[room.roomName]?.has('newElectric') ? 'border-red-500' : ''}`}
+                                className={`w-24 ${validationErrors[room.roomName]?.has("newElectric") ? "border-red-500" : ""}`}
                                 placeholder="Điện mới"
                                 min="0"
                               />
@@ -266,10 +359,14 @@ export function CalculationStage({
                               <Input
                                 type="number"
                                 value={room.currentWater}
-                                onChange={e =>
-                                  handleInputChange(room.roomName, 'currentWater', Number(e.target.value))
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    room.roomName,
+                                    "currentWater",
+                                    Number(e.target.value),
+                                  )
                                 }
-                                className={`w-24 ${validationErrors[room.roomName]?.has('currentWater') ? 'border-red-500' : ''}`}
+                                className={`w-24 ${validationErrors[room.roomName]?.has("currentWater") ? "border-red-500" : ""}`}
                                 disabled={!isEditing}
                                 min="0"
                               />
@@ -278,10 +375,14 @@ export function CalculationStage({
                               <Input
                                 type="number"
                                 value={room.newWater}
-                                onChange={e =>
-                                  handleInputChange(room.roomName, 'newWater', Number(e.target.value))
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    room.roomName,
+                                    "newWater",
+                                    Number(e.target.value),
+                                  )
                                 }
-                                className={`w-24 ${validationErrors[room.roomName]?.has('newWater') ? 'border-red-500' : ''}`}
+                                className={`w-24 ${validationErrors[room.roomName]?.has("newWater") ? "border-red-500" : ""}`}
                                 placeholder="Nước mới"
                                 min="0"
                               />
@@ -293,7 +394,11 @@ export function CalculationStage({
                                   size="icon"
                                   tabIndex={-1}
                                   onClick={() => toggleEdit(room.roomName)}
-                                  className={isEditing ? 'text-white bg-black' : 'text-primary'}
+                                  className={
+                                    isEditing
+                                      ? "text-white bg-black"
+                                      : "text-primary"
+                                  }
                                 >
                                   <Pencil2Icon className="h-4 w-4" />
                                 </Button>
@@ -301,7 +406,9 @@ export function CalculationStage({
                                   variant="destructive"
                                   tabIndex={-1}
                                   size="icon"
-                                  onClick={() => removeCalculationRoom(room.roomName)}
+                                  onClick={() =>
+                                    removeCalculationRoom(room.roomName)
+                                  }
                                 >
                                   <Cross2Icon className="h-4 w-4" />
                                 </Button>
@@ -322,7 +429,9 @@ export function CalculationStage({
           isOpen={isSelectionOpen}
           onClose={() => setIsSelectionOpen(false)}
           onConfirm={handleAddRooms}
-          availableRooms={getRemainingRooms(calculationRooms.map(r => r.roomName))}
+          availableRooms={getRemainingRooms(
+            calculationRooms.map((r) => r.roomName),
+          )}
         />
       </div>
     </div>
