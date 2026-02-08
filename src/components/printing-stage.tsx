@@ -227,7 +227,7 @@ export function PrintingStage({
       utility: {
         electricityCost: selectedCostSet.electricityCost,
         waterCost: selectedCostSet.waterCost,
-        garbageCost: selectedCostSet.garbageCost,
+        serviceCosts: selectedCostSet.serviceCosts,
         printDate: printingOptions.selectedDate,
         printTypes: {
           invoice: printingOptions.types.invoice,
@@ -320,7 +320,7 @@ export function PrintingStage({
                   value={groupBy}
                   onValueChange={(value: GroupByOption) => setGroupBy(value)}
                 >
-                  <SelectTrigger className="w-[200px] h-8">
+                  <SelectTrigger className="w-50 h-8">
                     <SelectValue placeholder="Xếp theo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -463,10 +463,12 @@ export function PrintingStage({
                       <span>Nước:</span>
                       <span>{selectedCostSet.waterCost}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Rác:</span>
-                      <span>{selectedCostSet.garbageCost}</span>
-                    </div>
+                    {selectedCostSet.serviceCosts.map((sc, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span>{sc.name}:</span>
+                        <span>{sc.fee}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -643,6 +645,7 @@ export function PrintingStage({
 
       {editingCostSet && (
         <EditUtilityCostDialog
+          key={editingCostSet.id}
           costSet={editingCostSet}
           onSave={(updates) => {
             updateCostSet(editingCostSet.id, updates);

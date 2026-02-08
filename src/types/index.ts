@@ -10,19 +10,24 @@ export interface Room {
   updatedAt: string;
 }
 
+export interface ServiceCost {
+  name: string;
+  fee: number;
+}
+
 export interface UtilityCostSet {
   id: number;
   name: string;
   electricityCost: number;
   waterCost: number;
-  garbageCost: number;
+  serviceCosts: ServiceCost[];
 }
 
 export interface ExportData {
   rooms: Room[];
   utilityCosts: UtilityCostSet[];
   exportedAt: string;
-  version: '1.0.0';
+  version: "1.0.0";
 }
 
 export interface BlockGroup {
@@ -53,7 +58,7 @@ export interface DataSet {
 
 export interface CalculationState {
   isCalculating: boolean;
-  selectedRooms: Set<string>;  
+  selectedRooms: Set<string>;
 }
 
 export interface ToolbarProps {
@@ -84,7 +89,7 @@ export interface CalculationStageProps {
   onCancel: () => void;
 }
 
-export type PrintingType = 'invoice' | 'total';
+export type PrintingType = "invoice" | "total";
 
 export interface PrintingOptions {
   types: {
@@ -121,7 +126,7 @@ export interface PrintRoomData {
 export interface PrintUtilityData {
   electricityCost: number;
   waterCost: number;
-  garbageCost: number;
+  serviceCosts: ServiceCost[];
   printDate: Date;
   printTypes: {
     invoice: boolean;

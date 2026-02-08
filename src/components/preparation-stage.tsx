@@ -154,7 +154,7 @@ export function PreparationStage({
               value={groupBy}
               onValueChange={(value: GroupByOption) => setGroupBy(value)}
             >
-              <SelectTrigger className="w-[200px] h-8">
+              <SelectTrigger className="w-50 h-8">
                 <SelectValue placeholder="Xếp theo" />
               </SelectTrigger>
               <SelectContent>

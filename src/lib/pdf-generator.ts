@@ -1,6 +1,16 @@
-import jsPDF from 'jspdf';
-import type { PrintingData, PrintRoomData } from '@/types';
-import './Roboto-Regular-normal.js';
+import jsPDF from "jspdf";
+import type { PrintingData, PrintRoomData, ServiceCost } from "@/types";
+import "./Roboto-Regular-normal.js";
+
+function sumServiceCosts(serviceCosts: ServiceCost[]): number {
+  return serviceCosts.reduce((sum, sc) => sum + sc.fee, 0);
+}
+
+function serviceColumnHeader(serviceCosts: ServiceCost[]): string {
+  if (serviceCosts.length === 0) return "Dịch vụ";
+  const names = serviceCosts.slice(0, 3).map((sc) => sc.name);
+  return serviceCosts.length > 3 ? names.join(", ") + "..." : names.join(", ");
+}
 
 const A4_WIDTH = 210; // mm
 const A4_HEIGHT = 297; // mm
@@ -22,7 +32,7 @@ const TOP_MARGIN = (A4_HEIGHT - TOTAL_HEIGHT) / 2;
  */
 function formatVND(amount: number): string {
   const inVND = Math.floor(amount * 1000);
-  return inVND.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return inVND.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
 /**
@@ -38,26 +48,31 @@ function calculateTotalVND(amount: number): number {
 /**
  * Generate a total sheet PDF with rooms grouped by block
  */
-export async function generateTotalSheetPDF(data: PrintingData): Promise<Uint8Array> {
+export async function generateTotalSheetPDF(
+  data: PrintingData,
+): Promise<Uint8Array> {
   // Create a new PDF document
   const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
   // Set Roboto font
-  doc.setFont('Roboto-Regular', 'normal');
+  doc.setFont("Roboto-Regular", "normal");
 
   // Group rooms by block
-  const blockGroups = data.rooms.reduce((groups, room) => {
-    const block = room.blockNumber;
-    if (!groups[block]) {
-      groups[block] = [];
-    }
-    groups[block].push(room);
-    return groups;
-  }, {} as Record<string, PrintRoomData[]>);
+  const blockGroups = data.rooms.reduce(
+    (groups, room) => {
+      const block = room.blockNumber;
+      if (!groups[block]) {
+        groups[block] = [];
+      }
+      groups[block].push(room);
+      return groups;
+    },
+    {} as Record<string, PrintRoomData[]>,
+  );
 
   // Sort blocks
   const sortedBlocks = Object.keys(blockGroups).sort();
@@ -73,7 +88,7 @@ export async function generateTotalSheetPDF(data: PrintingData): Promise<Uint8Ar
   });
 
   // Get ArrayBuffer and convert to Uint8Array
-  const arrayBuffer = doc.output('arraybuffer');
+  const arrayBuffer = doc.output("arraybuffer");
   return new Uint8Array(arrayBuffer);
 }
 
@@ -81,7 +96,7 @@ function drawTotalSheet(
   doc: jsPDF,
   block: string,
   rooms: PrintRoomData[],
-  data: PrintingData
+  data: PrintingData,
 ) {
   const margin = 5;
   const cellPadding = 3;
@@ -89,27 +104,32 @@ function drawTotalSheet(
   const rowHeight = 10;
   const titleSpacing = 1;
   const totalRowSpacing = 1;
-  
+  const serviceFeeTotal = sumServiceCosts(data.utility.serviceCosts);
+
   // Set up column widths
   const colWidths = {
     date: 20,
     room: 20,
     electric: 25,
     water: 25,
-    garbage: 25,
+    service: 25,
     rent: 25,
     total: 25,
-    note: 40
+    note: 40,
   };
 
   // Calculate total width and x position to center the table
-  const tableWidth = Object.values(colWidths).reduce((sum, width) => sum + width, 0);
+  const tableWidth = Object.values(colWidths).reduce(
+    (sum, width) => sum + width,
+    0,
+  );
   const startX = (A4_WIDTH - tableWidth) / 2;
 
   // Calculate total height needed
   const totalRows = rooms.length;
-  const contentHeight = headerHeight + (rowHeight * totalRows) + rowHeight + totalRowSpacing; // Include total row
-  
+  const contentHeight =
+    headerHeight + rowHeight * totalRows + rowHeight + totalRowSpacing; // Include total row
+
   // If bottom up, start from bottom of page
   let currentY = data.utility.totalSheetOptions?.bottomUp
     ? A4_HEIGHT - margin - contentHeight
@@ -119,77 +139,113 @@ function drawTotalSheet(
   doc.setFontSize(16);
   if (data.utility.totalSheetOptions?.includeDate) {
     doc.text(`Dãy: ${block}`, startX, currentY);
-    doc.text(data.utility.printDate.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' }), startX + 60, currentY);
+    doc.text(
+      data.utility.printDate.toLocaleDateString("vi-VN", {
+        month: "2-digit",
+        year: "numeric",
+      }),
+      startX + 60,
+      currentY,
+    );
     currentY += titleSpacing;
   }
 
   // Draw header
   doc.setFontSize(14);
   let currentX = startX;
-  
+
   // Header row
-  const headers = ['Ngày', 'Phòng', 'Điện', 'Nước', 'Rác', 'Phòng', 'Tổng', 'Ghi chú'];
+  const headers = [
+    "Ngày",
+    "Phòng",
+    "Điện",
+    "Nước",
+    serviceColumnHeader(data.utility.serviceCosts),
+    "Phòng",
+    "Tổng",
+    "Ghi chú",
+  ];
   headers.forEach((header, index) => {
     const width = Object.values(colWidths)[index];
     doc.rect(currentX, currentY, width, headerHeight);
-    doc.text(header, currentX + width/2, currentY + headerHeight/2 + 1, { align: 'center', baseline: 'middle' });
+    doc.text(header, currentX + width / 2, currentY + headerHeight / 2 + 1, {
+      align: "center",
+      baseline: "middle",
+    });
     currentX += width;
   });
   currentY += headerHeight;
 
   // Calculate totals first
-  const totals = rooms.reduce((acc, room) => {
-    const electricUsage = room.currentElectric - room.previousElectric;
-    const waterUsage = room.currentWater - room.previousWater;
-    const electricCost = Math.ceil(electricUsage * data.utility.electricityCost);
-    const waterCost = Math.ceil(waterUsage * data.utility.waterCost);
-    
-    return {
-      electric: acc.electric + electricCost,
-      water: acc.water + waterCost,
-      garbage: acc.garbage + data.utility.garbageCost,
-      rent: acc.rent + room.roomPrice,
-      total: acc.total + electricCost + waterCost + data.utility.garbageCost + room.roomPrice
-    };
-  }, { electric: 0, water: 0, garbage: 0, rent: 0, total: 0 });
+  const totals = rooms.reduce(
+    (acc, room) => {
+      const electricUsage = room.currentElectric - room.previousElectric;
+      const waterUsage = room.currentWater - room.previousWater;
+      const electricCost = Math.ceil(
+        electricUsage * data.utility.electricityCost,
+      );
+      const waterCost = Math.ceil(waterUsage * data.utility.waterCost);
+
+      return {
+        electric: acc.electric + electricCost,
+        water: acc.water + waterCost,
+        service: acc.service + serviceFeeTotal,
+        rent: acc.rent + room.roomPrice,
+        total:
+          acc.total +
+          electricCost +
+          waterCost +
+          serviceFeeTotal +
+          room.roomPrice,
+      };
+    },
+    { electric: 0, water: 0, service: 0, rent: 0, total: 0 },
+  );
 
   // Draw data rows
   doc.setFontSize(12);
-  rooms.forEach(room => {
+  rooms.forEach((room) => {
     currentX = startX;
-    
+
     // Calculate values
     const electricUsage = room.currentElectric - room.previousElectric;
     const waterUsage = room.currentWater - room.previousWater;
-    
+
     // Calculate costs
-    const electricCost = Math.ceil(electricUsage * data.utility.electricityCost);
+    const electricCost = Math.ceil(
+      electricUsage * data.utility.electricityCost,
+    );
     const waterCost = Math.ceil(waterUsage * data.utility.waterCost);
-    const total = electricCost + waterCost + data.utility.garbageCost + room.roomPrice;
+    const total = electricCost + waterCost + serviceFeeTotal + room.roomPrice;
 
     // Draw cells
     const cells = [
-      data.utility.printDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      data.utility.printDate.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
       room.roomName,
       electricCost.toString(),
       waterCost.toString(),
-      data.utility.garbageCost.toString(),
+      serviceFeeTotal.toString(),
       room.roomPrice.toString(),
       total.toString(),
-      ''
+      "",
     ];
 
     cells.forEach((cell, index) => {
       const width = Object.values(colWidths)[index];
       doc.rect(currentX, currentY, width, rowHeight);
-      
+
       // Right align numbers, center align room names
-      const align = index === 1 ? 'center' : index === 0 ? 'center' : 'right';
-      const padding = align === 'right' ? width - cellPadding : width/2;
-      
-      doc.text(cell, currentX + padding, currentY + rowHeight/2 + 1, 
-        { align, baseline: 'middle' });
-      
+      const align = index === 1 ? "center" : index === 0 ? "center" : "right";
+      const padding = align === "right" ? width - cellPadding : width / 2;
+
+      doc.text(cell, currentX + padding, currentY + rowHeight / 2 + 1, {
+        align,
+        baseline: "middle",
+      });
+
       currentX += width;
     });
     currentY += rowHeight;
@@ -201,47 +257,51 @@ function drawTotalSheet(
   } else {
     currentY += totalRowSpacing;
   }
-  
+
   currentX = startX;
   doc.setFontSize(13);
 
   // Draw total row without borders
   const totalCells = [
-    'Tổng cộng',
-    '',
+    "Tổng cộng",
+    "",
     totals.electric.toString(),
     totals.water.toString(),
-    totals.garbage.toString(),
+    totals.service.toString(),
     totals.rent.toString(),
     totals.total.toString(),
-    ''
+    "",
   ];
 
   totalCells.forEach((cell, index) => {
     const width = Object.values(colWidths)[index];
-    
+
     if (cell) {
-      const align = index === 0 ? 'left' : 'right';
-      const padding = align === 'right' ? width - cellPadding : cellPadding;
-      
-      doc.text(cell, currentX + padding, currentY + rowHeight/2 + 1,
-        { align, baseline: 'middle' });
+      const align = index === 0 ? "left" : "right";
+      const padding = align === "right" ? width - cellPadding : cellPadding;
+
+      doc.text(cell, currentX + padding, currentY + rowHeight / 2 + 1, {
+        align,
+        baseline: "middle",
+      });
     }
-    
+
     currentX += width;
   });
 }
 
-export async function generateInvoicePDF(data: PrintingData): Promise<Uint8Array> {
+export async function generateInvoicePDF(
+  data: PrintingData,
+): Promise<Uint8Array> {
   // Create a new PDF document
   const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
   // Set Roboto font
-  doc.setFont('Roboto-Regular', 'normal');
+  doc.setFont("Roboto-Regular", "normal");
   doc.setFontSize(14); // Increased from 12
 
   // Calculate how many pages we need
@@ -256,7 +316,7 @@ export async function generateInvoicePDF(data: PrintingData): Promise<Uint8Array
     // Get rooms for this page
     const pageRooms = data.rooms.slice(
       pageIndex * invoicesPerPage,
-      (pageIndex + 1) * invoicesPerPage
+      (pageIndex + 1) * invoicesPerPage,
     );
 
     // Draw invoices for this page
@@ -271,7 +331,7 @@ export async function generateInvoicePDF(data: PrintingData): Promise<Uint8Array
   }
 
   // Get ArrayBuffer and convert to Uint8Array
-  const arrayBuffer = doc.output('arraybuffer');
+  const arrayBuffer = doc.output("arraybuffer");
   return new Uint8Array(arrayBuffer);
 }
 
@@ -280,65 +340,75 @@ function drawInvoice(
   x: number,
   y: number,
   room: PrintRoomData,
-  data: PrintingData
+  data: PrintingData,
 ) {
   const { utility } = data;
   const lineHeight = 7;
   const indent = 5;
   const colWidth = 25;
-  
+
   // Draw border
   doc.rect(x, y, INVOICE_WIDTH, INVOICE_HEIGHT);
 
   // Header
   doc.setFontSize(14); // Increased from 12
   doc.text(`Phòng: ${room.roomName}`, x + indent, y + lineHeight);
-  const dateStr = utility.printDate.toLocaleDateString('vi-VN');
+  const dateStr = utility.printDate.toLocaleDateString("vi-VN");
   doc.text(`Ngày: ${dateStr}`, x + INVOICE_WIDTH - 50, y + lineHeight);
 
   // Electricity section
   doc.setFontSize(12); // Increased from 10
   let currentY = y + lineHeight * 3;
-  doc.text('ĐIỆN:', x + indent, currentY);
+  doc.text("ĐIỆN:", x + indent, currentY);
   currentY += lineHeight;
-  
-// Current reading
-doc.text('Số mới:', x + indent * 2, currentY);
-doc.text(room.currentElectric.toString(), x + indent * 2 + colWidth, currentY);
-currentY += lineHeight;
+
+  // Current reading
+  doc.text("Số mới:", x + indent * 2, currentY);
+  doc.text(
+    room.currentElectric.toString(),
+    x + indent * 2 + colWidth,
+    currentY,
+  );
+  currentY += lineHeight;
 
   // Previous reading
-  doc.text('Số cũ:', x + indent * 2, currentY);
-  doc.text(room.previousElectric.toString(), x + indent * 2 + colWidth, currentY);
+  doc.text("Số cũ:", x + indent * 2, currentY);
+  doc.text(
+    room.previousElectric.toString(),
+    x + indent * 2 + colWidth,
+    currentY,
+  );
   currentY += lineHeight;
 
   // Calculation
   const electricityUsage = room.currentElectric - room.previousElectric;
-  const roundedElectricityCost = Math.ceil(electricityUsage * utility.electricityCost);
+  const roundedElectricityCost = Math.ceil(
+    electricityUsage * utility.electricityCost,
+  );
   doc.text(
     `${electricityUsage} x ${formatVND(utility.electricityCost)} =`,
     x + indent * 2 + colWidth,
-    currentY
+    currentY,
   );
   doc.text(
     formatVND(roundedElectricityCost),
     x + INVOICE_WIDTH - 10,
     currentY,
-    { align: 'right' }
+    { align: "right" },
   );
   currentY += lineHeight * 1.5;
 
   // Water section
-  doc.text('NƯỚC:', x + indent, currentY);
+  doc.text("NƯỚC:", x + indent, currentY);
   currentY += lineHeight;
 
   // Current reading
-  doc.text('Số mới:', x + indent * 2, currentY);
+  doc.text("Số mới:", x + indent * 2, currentY);
   doc.text(room.currentWater.toString(), x + indent * 2 + colWidth, currentY);
   currentY += lineHeight;
-  
+
   // Previous reading
-  doc.text('Số cũ:', x + indent * 2, currentY);
+  doc.text("Số cũ:", x + indent * 2, currentY);
   doc.text(room.previousWater.toString(), x + indent * 2 + colWidth, currentY);
   currentY += lineHeight;
 
@@ -347,82 +417,90 @@ currentY += lineHeight;
   doc.text(
     `${waterUsage} x ${formatVND(utility.waterCost)} =`,
     x + indent * 2 + colWidth,
-    currentY
+    currentY,
   );
   doc.text(
     formatVND(waterUsage * utility.waterCost),
     x + INVOICE_WIDTH - 10,
     currentY,
-    { align: 'right' }
+    { align: "right" },
   );
   currentY += lineHeight * 1.5;
 
   // Room rent
-  doc.text('PHÒNG:', x + indent, currentY);
-  doc.text(
-    formatVND(room.roomPrice),
-    x + INVOICE_WIDTH - 10,
-    currentY,
-    { align: 'right' }
-  );
+  doc.text("PHÒNG:", x + indent, currentY);
+  doc.text(formatVND(room.roomPrice), x + INVOICE_WIDTH - 10, currentY, {
+    align: "right",
+  });
   currentY += lineHeight;
 
-  // Garbage fee
-  doc.text('RÁC:', x + indent, currentY);
-  doc.text(
-    formatVND(utility.garbageCost),
-    x + INVOICE_WIDTH - 10,
-    currentY,
-    { align: 'right' }
-  );
-  currentY += lineHeight * 2;
+  // Service fees
+  utility.serviceCosts.forEach((sc) => {
+    doc.text(`${sc.name.toUpperCase()}:`, x + indent, currentY);
+    doc.text(formatVND(sc.fee), x + INVOICE_WIDTH - 10, currentY, {
+      align: "right",
+    });
+    currentY += lineHeight;
+  });
+  currentY += lineHeight;
 
   // Calculate total with rounding up
-  const subtotal = roundedElectricityCost +
-                  (waterUsage * utility.waterCost) +
-                  room.roomPrice +
-                  utility.garbageCost;
+  const subtotal =
+    roundedElectricityCost +
+    waterUsage * utility.waterCost +
+    room.roomPrice +
+    sumServiceCosts(utility.serviceCosts);
   const total = calculateTotalVND(subtotal);
 
   // Total
   doc.setFontSize(14);
-  doc.text('TỔNG CỘNG:', x + indent, currentY);
+  doc.text("TỔNG CỘNG:", x + indent, currentY);
   doc.text(
-    total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
+    total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
     x + INVOICE_WIDTH - 10,
     currentY,
-    { align: 'right' }
+    { align: "right" },
   );
   currentY += lineHeight * 2;
 
   // Footer
   doc.setFontSize(14);
   const footerX = x + INVOICE_WIDTH / 2;
-  doc.text('Trả phòng vui lòng báo trước 1 tháng.', footerX, currentY, { align: 'center' });
+  doc.text("Trả phòng vui lòng báo trước 1 tháng.", footerX, currentY, {
+    align: "center",
+  });
   currentY += lineHeight + 1;
-  doc.text('Nếu không báo, nhà trọ không hoàn cọc.', footerX, currentY, { align: 'center' });
+  doc.text("Nếu không báo, nhà trọ không hoàn cọc.", footerX, currentY, {
+    align: "center",
+  });
   currentY += lineHeight + 1;
 }
 
-export async function generateReceivingSheetPDF(data: PrintingData): Promise<Uint8Array> {
+export async function generateReceivingSheetPDF(
+  data: PrintingData,
+): Promise<Uint8Array> {
   // Create a new PDF document in landscape
   const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4',
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
   });
 
   // Set Roboto font
-  doc.setFont('Roboto-Regular', 'normal');
+  doc.setFont("Roboto-Regular", "normal");
 
   receivingSheet(doc, data.rooms, data);
 
   // Get ArrayBuffer and convert to Uint8Array
-  const arrayBuffer = doc.output('arraybuffer');
+  const arrayBuffer = doc.output("arraybuffer");
   return new Uint8Array(arrayBuffer);
 }
 
-function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) {
+function receivingSheet(
+  doc: jsPDF,
+  rooms: PrintRoomData[],
+  data: PrintingData,
+) {
   const { utility } = data;
   const lineHeight = 8;
   const columnWidth = 30;
@@ -433,7 +511,7 @@ function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const maxColumnsPerPage = Math.floor((pageWidth - startX) / columnWidth);
-  
+
   let currentX = startX;
   let currentY = startY;
   let currentColumn = 0;
@@ -441,19 +519,22 @@ function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) 
   doc.setFontSize(12);
 
   // Group rooms by block
-  const blockGroups = rooms.reduce<Record<string, PrintRoomData[]>>((acc, room) => {
-    const blockNumber = room.blockNumber;
-    if (!acc[blockNumber]) {
-      acc[blockNumber] = [];
-    }
-    acc[blockNumber].push(room);
-    return acc;
-  }, {});
+  const blockGroups = rooms.reduce<Record<string, PrintRoomData[]>>(
+    (acc, room) => {
+      const blockNumber = room.blockNumber;
+      if (!acc[blockNumber]) {
+        acc[blockNumber] = [];
+      }
+      acc[blockNumber].push(room);
+      return acc;
+    },
+    {},
+  );
 
   // Sort blocks and process each block
   Object.entries(blockGroups)
     .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([_, blockRooms]) => {
+    .forEach(([, blockRooms]) => {
       // Sort rooms within block by room number
       blockRooms
         .sort((a, b) => a.roomNumber - b.roomNumber)
@@ -474,16 +555,19 @@ function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) 
           }
 
           const electricityUsage = room.currentElectric - room.previousElectric;
-          const roundedElectricityCost = Math.ceil(electricityUsage * utility.electricityCost);
+          const roundedElectricityCost = Math.ceil(
+            electricityUsage * utility.electricityCost,
+          );
           const waterUsage = room.currentWater - room.previousWater;
-          const total = roundedElectricityCost +
-                      (waterUsage * utility.waterCost) +
-                      room.roomPrice +
-                      utility.garbageCost;
+          const total =
+            roundedElectricityCost +
+            waterUsage * utility.waterCost +
+            room.roomPrice +
+            sumServiceCosts(utility.serviceCosts);
 
           doc.text(`${room.roomName}: ${total}`, currentX, currentY);
           currentY += lineHeight;
-      });
+        });
 
       // Add gap after each block, but check if we need to move to next column
       if (currentY + blockGap > pageHeight - bottomMargin) {
@@ -501,5 +585,5 @@ function receivingSheet(doc: jsPDF, rooms: PrintRoomData[], data: PrintingData) 
       } else {
         currentY += blockGap; // Add gap between blocks
       }
-  });
+    });
 }

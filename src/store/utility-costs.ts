@@ -1,25 +1,29 @@
-import { create } from 'zustand';
-import type { UtilityCostSet } from '@/types';
+import { create } from "zustand";
+import type { UtilityCostSet } from "@/types";
+import { migrateUtilityCostSet } from "@/utils/migrate";
 
 interface UtilityCostsState {
   costSets: UtilityCostSet[];
-  addCostSet: (costSet: Omit<UtilityCostSet, 'id'>) => UtilityCostSet;
-  updateCostSet: (id: number, updates: Partial<Omit<UtilityCostSet, 'id'>>) => void;
+  addCostSet: (costSet: Omit<UtilityCostSet, "id">) => UtilityCostSet;
+  updateCostSet: (
+    id: number,
+    updates: Partial<Omit<UtilityCostSet, "id">>,
+  ) => void;
   deleteCostSet: (id: number) => void;
   importCostSets: (costSets: UtilityCostSet[]) => void;
 }
 
 const defaultCostSet: UtilityCostSet = {
   id: 1,
-  name: 'Default Costs',
+  name: "Default Costs",
   electricityCost: 3.7,
   waterCost: 5,
-  garbageCost: 60,
+  serviceCosts: [{ name: "Rác", fee: 60 }],
 };
 
 export const useUtilityCostsStore = create<UtilityCostsState>((set, get) => ({
   costSets: [defaultCostSet],
-  
+
   addCostSet: (costSet) => {
     // Find the highest id
     const maxId = get().costSets.reduce((max, set) => Math.max(max, set.id), 0);
@@ -28,25 +32,28 @@ export const useUtilityCostsStore = create<UtilityCostsState>((set, get) => ({
     set((state) => ({ costSets: [...state.costSets, newCostSet] }));
     return newCostSet;
   },
-  
-  updateCostSet: (id, updates) => set((state) => ({
-    costSets: state.costSets.map((set) =>
-      set.id === id ? { ...set, ...updates } : set
-    ),
-  })),
-  
-  deleteCostSet: (id) => set((state) => ({
-    costSets: state.costSets.filter((set) => set.id !== id),
-  })),
-  
+
+  updateCostSet: (id, updates) =>
+    set((state) => ({
+      costSets: state.costSets.map((set) =>
+        set.id === id ? { ...set, ...updates } : set,
+      ),
+    })),
+
+  deleteCostSet: (id) =>
+    set((state) => ({
+      costSets: state.costSets.filter((set) => set.id !== id),
+    })),
+
   importCostSets: (costSets) => {
     // If no cost sets provided, keep the default
     if (!costSets || costSets.length === 0) {
       set({ costSets: [defaultCostSet] });
       return;
     }
-    
-    // Otherwise use the imported cost sets
-    set({ costSets });
+
+    // Migrate legacy garbageCost → serviceCosts
+    const migrated = costSets.map(migrateUtilityCostSet);
+    set({ costSets: migrated });
   },
 }));
