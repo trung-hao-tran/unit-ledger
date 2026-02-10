@@ -1,4 +1,5 @@
-import type { UtilityCostSet } from '@/types';
+import type { UtilityCostSet, InvoiceSettings } from "@/types";
+import { DEFAULT_INVOICE_REMARKS } from "@/store/invoice-settings";
 
 /**
  * Migrate a legacy UtilityCostSet that has `garbageCost` into the new
@@ -12,8 +13,23 @@ export function migrateUtilityCostSet(data: any): UtilityCostSet {
     const { garbageCost, ...rest } = data;
     return {
       ...rest,
-      serviceCosts: [{ name: 'Rác', fee: garbageCost }],
+      serviceCosts: [{ name: "Rác", fee: garbageCost }],
     };
   }
   return data as UtilityCostSet;
+}
+
+/**
+ * Ensure invoiceSettings exists on export data.
+ * If missing, return the default.
+ *
+ * TODO: Remove once all persisted data includes invoiceSettings.
+ */
+export function migrateInvoiceSettings(
+  settings?: InvoiceSettings,
+): InvoiceSettings {
+  if (settings && Array.isArray(settings.remarks)) {
+    return settings;
+  }
+  return { remarks: DEFAULT_INVOICE_REMARKS };
 }

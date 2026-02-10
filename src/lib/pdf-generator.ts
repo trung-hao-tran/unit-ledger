@@ -463,17 +463,13 @@ function drawInvoice(
   );
   currentY += lineHeight * 2;
 
-  // Footer
+  // Footer (dynamic remarks)
   doc.setFontSize(14);
   const footerX = x + INVOICE_WIDTH / 2;
-  doc.text("Trả phòng vui lòng báo trước 1 tháng.", footerX, currentY, {
-    align: "center",
+  utility.remarks.forEach((line) => {
+    doc.text(line, footerX, currentY, { align: "center" });
+    currentY += lineHeight + 1;
   });
-  currentY += lineHeight + 1;
-  doc.text("Nếu không báo, nhà trọ không hoàn cọc.", footerX, currentY, {
-    align: "center",
-  });
-  currentY += lineHeight + 1;
 }
 
 export async function generateReceivingSheetPDF(

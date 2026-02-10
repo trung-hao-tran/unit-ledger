@@ -23,9 +23,14 @@ export interface UtilityCostSet {
   serviceCosts: ServiceCost[];
 }
 
+export interface InvoiceSettings {
+  remarks: string[];
+}
+
 export interface ExportData {
   rooms: Room[];
   utilityCosts: UtilityCostSet[];
+  invoiceSettings?: InvoiceSettings;
   exportedAt: string;
   version: "1.0.0";
 }
@@ -133,6 +138,7 @@ export interface PrintUtilityData {
     total: boolean;
     receivingSheet: boolean;
   };
+  remarks: string[];
   totalSheetOptions?: {
     bottomUp: boolean;
     includeDate: boolean;

@@ -31,6 +31,8 @@ import { useUtilityCostsStore } from "@/store/utility-costs";
 import { useSessionStore } from "@/store/session";
 import { EditUtilityCostDialog } from "@/components/edit-utility-cost-dialog";
 import { AddUtilityCostDialog } from "@/components/add-utility-cost-dialog";
+import { EditInvoiceRemarksDialog } from "@/components/edit-invoice-remarks-dialog";
+import { useInvoiceSettingsStore } from "@/store/invoice-settings";
 import { Pencil, Plus, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -71,6 +73,8 @@ export function PrintingStage({
   );
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newCostSetDialogOpen, setNewCostSetDialogOpen] = useState(false);
+  const [remarksDialogOpen, setRemarksDialogOpen] = useState(false);
+  const { settings: invoiceSettings, setRemarks } = useInvoiceSettingsStore();
   const [groupBy, setGroupBy] = useState<GroupByOption>("date");
   const [printingOptions, setPrintingOptions] = useState<PrintingOptions>(
     () => {
@@ -234,6 +238,7 @@ export function PrintingStage({
           total: printingOptions.types.total,
           receivingSheet: printingOptions.types.receivingSheet,
         },
+        remarks: invoiceSettings.remarks,
         totalSheetOptions: {
           bottomUp: printingOptions.bottomUp,
           includeDate: printingOptions.includeDate,
@@ -537,6 +542,16 @@ export function PrintingStage({
                         }}
                       />
                       <Label>Hóa đơn</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={!printingOptions.types.invoice}
+                        onClick={() => setRemarksDialogOpen(true)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
 
@@ -665,6 +680,13 @@ export function PrintingStage({
           const addedSet = addCostSet(newCostSet);
           setSelectedCostSet(addedSet);
         }}
+      />
+
+      <EditInvoiceRemarksDialog
+        remarks={invoiceSettings.remarks}
+        onSave={setRemarks}
+        open={remarksDialogOpen}
+        onOpenChange={setRemarksDialogOpen}
       />
     </div>
   );

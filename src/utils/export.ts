@@ -1,7 +1,8 @@
 import type { ExportData } from "@/types";
 import { useRoomsStore } from "@/store/rooms";
 import { useUtilityCostsStore } from "@/store/utility-costs";
-import { migrateUtilityCostSet } from "@/utils/migrate";
+import { useInvoiceSettingsStore } from "@/store/invoice-settings";
+import { migrateUtilityCostSet, migrateInvoiceSettings } from "@/utils/migrate";
 
 /**
  * Exports data from stores to a JSON file
@@ -12,11 +13,13 @@ export async function exportToJson(): Promise<void> {
     // Get data from stores
     const rooms = useRoomsStore.getState().rooms;
     const utilityCosts = useUtilityCostsStore.getState().costSets;
+    const invoiceSettings = useInvoiceSettingsStore.getState().settings;
 
     // Prepare the data with metadata
     const exportData: ExportData = {
       rooms: rooms || [],
       utilityCosts: utilityCosts || [],
+      invoiceSettings,
       exportedAt: new Date().toISOString(),
       version: "1.0.0",
     };
@@ -67,9 +70,15 @@ export async function importFromJson(file: File): Promise<void> {
       migrateUtilityCostSet,
     );
 
-    // Update stores with empty arrays if data is missing
+    // Migrate invoiceSettings (compat for old exports)
+    const invoiceSettings = migrateInvoiceSettings(
+      importedData.invoiceSettings,
+    );
+
+    // Update stores
     useRoomsStore.getState().setRooms(importedData.rooms || []);
     useUtilityCostsStore.getState().importCostSets(migratedCosts);
+    useInvoiceSettingsStore.getState().importSettings(invoiceSettings);
   } catch (error) {
     console.error("Failed to import data:", error);
     throw new Error(

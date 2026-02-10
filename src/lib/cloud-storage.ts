@@ -1,11 +1,12 @@
 import { supabase } from "./supabase";
-import type { Room, UtilityCostSet } from "@/types";
+import type { Room, UtilityCostSet, InvoiceSettings } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { migrateUtilityCostSet } from "@/utils/migrate";
+import { migrateUtilityCostSet, migrateInvoiceSettings } from "@/utils/migrate";
 
 interface CloudExportData {
   rooms: Room[];
   utilityCosts: UtilityCostSet[];
+  invoiceSettings?: InvoiceSettings;
   exportedAt: string;
   version: string;
 }
@@ -18,6 +19,7 @@ export async function saveToCloud(
   cloudName: string,
   rooms: Room[],
   utilityCosts: UtilityCostSet[],
+  invoiceSettings?: InvoiceSettings,
 ): Promise<string> {
   try {
     // Use a consistent filename based on cloud name
@@ -27,6 +29,7 @@ export async function saveToCloud(
     const exportData: CloudExportData = {
       rooms,
       utilityCosts,
+      invoiceSettings,
       exportedAt: new Date().toISOString(),
       version: "1.0.0",
     };
@@ -112,9 +115,12 @@ export async function loadFromCloud(
     const jsonText = await data.text();
     const exportData: CloudExportData = JSON.parse(jsonText);
 
-    // Migrate legacy garbageCost → serviceCosts
+    // Migrate legacy data
     exportData.utilityCosts = (exportData.utilityCosts || []).map(
       migrateUtilityCostSet,
+    );
+    exportData.invoiceSettings = migrateInvoiceSettings(
+      exportData.invoiceSettings,
     );
 
     toast({
