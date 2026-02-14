@@ -32,7 +32,7 @@ export interface ExportData {
   utilityCosts: UtilityCostSet[];
   invoiceSettings?: InvoiceSettings;
   exportedAt: string;
-  version: "1.0.0";
+  version: string;
 }
 
 export interface BlockGroup {

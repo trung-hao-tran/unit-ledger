@@ -21,7 +21,7 @@ export async function exportToJson(): Promise<void> {
       utilityCosts: utilityCosts || [],
       invoiceSettings,
       exportedAt: new Date().toISOString(),
-      version: "1.0.0",
+      version: __APP_VERSION__,
     };
 
     // Validate the data before export
@@ -97,8 +97,9 @@ function validateExportData(data: ExportData): void {
     throw new Error("Invalid data format");
   }
 
-  // Validate version
-  if (data.version !== "1.0.0") {
+  // Validate version (accept current and legacy versions)
+  const supportedVersions = [__APP_VERSION__, "1.0.0"];
+  if (!supportedVersions.includes(data.version)) {
     throw new Error("Unsupported file version");
   }
 

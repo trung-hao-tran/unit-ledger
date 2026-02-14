@@ -1,7 +1,7 @@
 {
   "name": "weird-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.2.0",
   "type": "module",
   "homepage": "https://trung-hao-tran.github.io/unit-ledger",
   "scripts": {
