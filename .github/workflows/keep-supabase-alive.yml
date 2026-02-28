@@ -2,7 +2,7 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: "0 0 */5 * *" # Every 5 days
+    - cron: "0 0 */3 * *" # Every 3 days
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -22,18 +22,36 @@ jobs:
             echo "[WARNING] Ping returned $response"
           fi
 
-      - name: Query keep_alive table
+      - name: Insert keep_alive row
         run: |
           response=$(curl -s -w "\n%{http_code}" \
-            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/keep_alive?select=*&limit=1" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/keep_alive" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}")
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"pinged_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}')
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | head -n -1)
-          echo "DB query response: $http_code"
+          echo "Insert response: $http_code"
           echo "Body: $body"
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "[OK] Database query succeeded"
+            echo "[OK] Keep-alive row inserted"
           else
-            echo "[WARNING] Database query returned $http_code"
+            echo "[WARNING] Insert returned $http_code"
+          fi
+
+      - name: Cleanup old keep_alive rows
+        run: |
+          cutoff=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/keep_alive?pinged_at=lt.${cutoff}" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -X DELETE)
+          echo "Cleanup response: $response"
+          if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+            echo "[OK] Old rows cleaned up"
+          else
+            echo "[WARNING] Cleanup returned $response"
           fi
