@@ -499,14 +499,13 @@ function receivingSheet(
 ) {
   const { utility } = data;
   const lineHeight = 8;
-  const columnWidth = 30;
   const startX = 5;
   const startY = 10;
-  const bottomMargin = 5; // Reduced bottom margin
-  const blockGap = lineHeight * 1.5; // Gap between blocks
+  const bottomMargin = 5;
+  const maxColumnsPerPage = 8;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const maxColumnsPerPage = Math.floor((pageWidth - startX) / columnWidth);
+  const columnWidth = (pageWidth - startX) / maxColumnsPerPage;
 
   let currentX = startX;
   let currentY = startY;
@@ -561,25 +560,21 @@ function receivingSheet(
             room.roomPrice +
             sumServiceCosts(utility.serviceCosts);
 
-          doc.text(`${room.roomName}: ${total}`, currentX, currentY);
+          const formattedTotal = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+          doc.text(`${room.roomName}: ${formattedTotal}`, currentX, currentY);
           currentY += lineHeight;
         });
 
-      // Add gap after each block, but check if we need to move to next column
-      if (currentY + blockGap > pageHeight - bottomMargin) {
-        currentY = startY;
-        currentX += columnWidth;
-        currentColumn++;
+      // Each block gets its own column — always advance to next column after block
+      currentX += columnWidth;
+      currentColumn++;
+      currentY = startY;
 
-        // If we've filled all columns, start a new page
-        if (currentColumn >= maxColumnsPerPage) {
-          doc.addPage();
-          currentX = startX;
-          currentY = startY;
-          currentColumn = 0;
-        }
-      } else {
-        currentY += blockGap; // Add gap between blocks
+      if (currentColumn >= maxColumnsPerPage) {
+        doc.addPage();
+        currentX = startX;
+        currentY = startY;
+        currentColumn = 0;
       }
     });
 }
