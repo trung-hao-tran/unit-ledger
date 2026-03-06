@@ -560,8 +560,10 @@ function receivingSheet(
             room.roomPrice +
             sumServiceCosts(utility.serviceCosts);
 
-          const formattedTotal = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-          doc.text(`${room.roomName}: ${formattedTotal}`, currentX, currentY);
+          const formattedTotal = total
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+          doc.text(`${room.roomName} = ${formattedTotal}`, currentX, currentY);
           currentY += lineHeight;
         });
 
