@@ -498,7 +498,7 @@ function receivingSheet(
   data: PrintingData,
 ) {
   const { utility } = data;
-  const lineHeight = 8;
+  const lineHeight = 10;
   const startX = 5;
   const startY = 10;
   const bottomMargin = 5;
@@ -511,7 +511,8 @@ function receivingSheet(
   let currentY = startY;
   let currentColumn = 0;
 
-  doc.setFontSize(12);
+  doc.setFontSize(14);
+  doc.setCharSpace(0.5);
 
   // Group rooms by block
   const blockGroups = rooms.reduce<Record<string, PrintRoomData[]>>(
