@@ -151,7 +151,7 @@ function drawTotalSheet(
   }
 
   // Draw header
-  doc.setFontSize(20);
+  doc.setFontSize(14);
   let currentX = startX;
 
   // Header row
@@ -564,7 +564,7 @@ function receivingSheet(
           const formattedTotal = total
             .toString()
             .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-          doc.text(`${room.roomName} = ${formattedTotal}`, currentX, currentY);
+          doc.text(`${room.roomName}= ${formattedTotal}`, currentX, currentY);
           currentY += lineHeight;
         });
 
