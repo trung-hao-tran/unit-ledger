@@ -3,6 +3,13 @@ import type { Room, UtilityCostSet, InvoiceSettings } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { migrateUtilityCostSet, migrateInvoiceSettings } from "@/utils/migrate";
 
+const MAX_VERSIONS = 30;
+
+function formatTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}`;
+}
+
 interface CloudExportData {
   rooms: Room[];
   utilityCosts: UtilityCostSet[];
@@ -12,8 +19,9 @@ interface CloudExportData {
 }
 
 /**
- * Save data to Supabase Storage with a specific cloud name
- * This will replace any existing file with the same name
+ * Save data to Supabase Storage under a versioned folder.
+ * Each save creates a new file: ${cloudName}/v_${timestamp}.json
+ * Old versions beyond MAX_VERSIONS are pruned automatically.
  */
 export async function saveToCloud(
   cloudName: string,
@@ -22,10 +30,9 @@ export async function saveToCloud(
   invoiceSettings?: InvoiceSettings,
 ): Promise<string> {
   try {
-    // Use a consistent filename based on cloud name
-    const filename = `${cloudName}.json`;
+    const timestamp = formatTimestamp(new Date());
+    const filename = `${cloudName}/${timestamp}.json`;
 
-    // Create export data
     const exportData: CloudExportData = {
       rooms,
       utilityCosts,
@@ -34,23 +41,31 @@ export async function saveToCloud(
       version: "1.0.0",
     };
 
-    // Convert data to JSON string
-    const jsonData = JSON.stringify(exportData);
+    const blob = new Blob([JSON.stringify(exportData)], {
+      type: "application/json",
+    });
 
-    // Create a Blob from the JSON string
-    const blob = new Blob([jsonData], { type: "application/json" });
-
-    // Upload to Supabase Storage with upsert: true to replace existing file
     const { error } = await supabase.storage
       .from("exports")
       .upload(filename, blob, {
         contentType: "application/json",
-        upsert: true, // Replace existing file
+        upsert: false,
       });
 
     if (error) throw error;
 
-    // Get public URL
+    // Prune old versions — keep only the latest MAX_VERSIONS
+    const { data: files, error: listError } = await supabase.storage
+      .from("exports")
+      .list(cloudName, { sortBy: { column: "created_at", order: "asc" } });
+
+    if (!listError && files && files.length > MAX_VERSIONS) {
+      const toDelete = files
+        .slice(0, files.length - MAX_VERSIONS)
+        .map((f) => `${cloudName}/${f.name}`);
+      await supabase.storage.from("exports").remove(toDelete);
+    }
+
     const { data: urlData } = supabase.storage
       .from("exports")
       .getPublicUrl(filename);
@@ -73,29 +88,53 @@ export async function saveToCloud(
 }
 
 /**
- * Load data from Supabase Storage for a specific cloud name
+ * Load the latest version of data from Supabase Storage for a given cloud name.
+ * If no versioned folder exists, falls back to the legacy flat file and migrates it.
  */
 export async function loadFromCloud(
   cloudName: string,
 ): Promise<CloudExportData | null> {
   try {
-    // Use a consistent filename based on cloud name
-    const filename = `${cloudName}.json`;
-
-    // Check if the file exists
-    const { data: fileExists, error: checkError } = await supabase.storage
+    // Check for versioned folder
+    const { data: files } = await supabase.storage
       .from("exports")
-      .list("", {
-        search: filename,
+      .list(cloudName, { sortBy: { column: "created_at", order: "desc" } });
+
+    if (files && files.length > 0) {
+      // Load latest versioned file
+      const { data, error } = await supabase.storage
+        .from("exports")
+        .download(`${cloudName}/${files[0].name}`);
+
+      if (error) throw error;
+
+      const exportData: CloudExportData = JSON.parse(await data.text());
+
+      exportData.utilityCosts = (exportData.utilityCosts || []).map(
+        migrateUtilityCostSet,
+      );
+      exportData.invoiceSettings = migrateInvoiceSettings(
+        exportData.invoiceSettings,
+      );
+
+      toast({
+        title: "Tải dữ liệu thành công",
+        description: `Đã tải dữ liệu từ "${cloudName}" (${new Date(exportData.exportedAt).toLocaleString()})`,
       });
 
-    if (checkError) throw checkError;
+      return exportData;
+    }
 
-    if (
-      !fileExists ||
-      fileExists.length === 0 ||
-      !fileExists.some((file) => file.name === filename)
-    ) {
+    // No versioned folder — check for legacy flat file
+    const { data: flatFiles, error: flatListError } = await supabase.storage
+      .from("exports")
+      .list("", { search: `${cloudName}.json` });
+
+    if (flatListError) throw flatListError;
+
+    const legacyFile = flatFiles?.find((f) => f.name === `${cloudName}.json`);
+
+    if (!legacyFile) {
       toast({
         title: "Không tìm thấy dữ liệu",
         description: `Không có dữ liệu nào được lưu trữ với tên "${cloudName}"`,
@@ -104,18 +143,24 @@ export async function loadFromCloud(
       return null;
     }
 
-    // Download the file
-    const { data, error } = await supabase.storage
+    // Migrate: move flat file into versioned folder using original upload time as filename
+    const timestamp = formatTimestamp(new Date(legacyFile.created_at ?? Date.now()));
+    const migratedFilename = `${cloudName}/${timestamp}.json`;
+
+    const { data: flatData, error: flatDownloadError } = await supabase.storage
       .from("exports")
-      .download(filename);
+      .download(`${cloudName}.json`);
 
-    if (error) throw error;
+    if (flatDownloadError) throw flatDownloadError;
 
-    // Parse the JSON data
-    const jsonText = await data.text();
-    const exportData: CloudExportData = JSON.parse(jsonText);
+    const { error: moveError } = await supabase.storage
+      .from("exports")
+      .move(`${cloudName}.json`, migratedFilename);
 
-    // Migrate legacy data
+    if (moveError) throw moveError;
+
+    const exportData: CloudExportData = JSON.parse(await flatData.text());
+
     exportData.utilityCosts = (exportData.utilityCosts || []).map(
       migrateUtilityCostSet,
     );
