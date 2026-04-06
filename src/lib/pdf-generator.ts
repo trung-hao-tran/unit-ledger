@@ -151,7 +151,7 @@ function drawTotalSheet(
   }
 
   // Draw header
-  doc.setFontSize(14);
+  doc.setFontSize(20);
   let currentX = startX;
 
   // Header row
